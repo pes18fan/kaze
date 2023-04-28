@@ -2,6 +2,7 @@ require "./token"
 
 module Kaze
   abstract class Expr
+    # All the types a visitor function can return.
     alias VisitorGenerics = (String | Float64 | Bool)?
 
     module Visitor
@@ -73,6 +74,5 @@ module Kaze
         visitor.visit_ternary_expr(self)
       end
     end
-
   end
 end
