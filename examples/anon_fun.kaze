@@ -1,0 +1,7 @@
+fun repeat <- func, times
+  for var i = 0; i <= times; i = i + 1
+    func()
+  end
+end
+
+repeat(lambda a, b: a + b, 5)

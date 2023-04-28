@@ -1,0 +1,10 @@
+var a = 1
+
+while a <= 10
+  println "epic"
+  a = a + 1
+end
+
+for var i = 1; i < 10; i++ 
+  println i
+end

@@ -1,0 +1,15 @@
+name: kaze
+version: 0.1.0
+
+authors:
+  - pes18fan <pes18fan@disr.it>
+
+targets:
+  kaze:
+    main: src/main.cr
+  generate_ast:
+    main: scripts/generate_ast.cr
+
+crystal: ">= 1.8.0, < 2.0"
+
+license: MPL-2.0
