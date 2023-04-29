@@ -3,12 +3,24 @@ require "./token"
 module Kaze
   abstract class Stmt
     module Visitor
+      abstract def visit_block_stmt(stmt : Block) : VG
       abstract def visit_expression_stmt(stmt : Expression) : VG
       abstract def visit_println_stmt(stmt : Println) : VG
       abstract def visit_var_stmt(stmt : Var) : VG
     end
 
     abstract def accept(visitor : Visitor)
+
+    class Block < Stmt
+      getter statements
+
+      def initialize(@statements : Array(Stmt))
+      end
+
+      def accept(visitor : Visitor)
+        visitor.visit_block_stmt(self)
+      end
+    end
 
     class Expression < Stmt
       getter expression

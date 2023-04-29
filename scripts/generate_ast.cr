@@ -16,6 +16,7 @@ define_ast(output_dir, "expr", [
 ], "(String | Float64 | Bool)?")
 
 define_ast(output_dir, "stmt", [
+  "Block        $   statements : Array(Stmt)",
   "Expression   $   expression : Expr",
   "Println      $   expression : Expr",
   "Var          $   name : Token, initializer : Expr?"

@@ -13,10 +13,10 @@ module Kaze
     def interpret(statements : Array(Stmt))
       begin
         statements.each do |statement|
-          execute statement
+            execute statement
         end
       rescue err : RuntimeError
-        Kaze::Program.runtime_error(err)
+        Program.runtime_error(err)
       end
     end
 
@@ -158,6 +158,25 @@ module Kaze
 
     private def execute(stmt : Stmt)
       stmt.accept(self)
+    end
+
+    private def execute_block(statements : Array(Stmt), environment : Environment)
+      previous = self.environment
+
+      begin
+        self.environment = environment
+
+        statements.each do |statement|
+          execute statement
+        end
+      ensure
+        self.environment = previous
+      end
+    end
+
+    def visit_block_stmt(stmt : Stmt::Block) : Nil
+      execute_block(stmt.statements, Environment.new(environment))
+      nil
     end
 
     def visit_expression_stmt(stmt : Stmt::Expression) : Nil

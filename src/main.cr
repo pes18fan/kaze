@@ -55,14 +55,14 @@ module Kaze
       statements = parser.parse
 
       return if @@had_error
-      
+
       @@interpreter.interpret(statements)
     end
 
     # Reports an error with a token.
     def self.error(token : Token, message : String)
       if token.type == TT::EOF
-        report(token.line, "at end", message);
+        report(token.line, "at end", message)
       else
         report(token.line, "at \"" + token.lexeme + "\"", message)
       end

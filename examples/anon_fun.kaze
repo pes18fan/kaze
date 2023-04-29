@@ -1,5 +1,5 @@
-fun repeat <- func, times
-  for var i = 0; i <= times; i = i + 1
+fun repeat <- func, times do
+  for var i = 0 to times do
     func()
   end
 end

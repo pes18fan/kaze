@@ -26,7 +26,9 @@ module Kaze
 
     # var_decl        -> "var" IDENTIFIER ( "=" expression )? "\n" ;
 
-    # statement       -> expr_stmt | println_stmt ;
+    # statement       -> expr_stmt | println_stmt | block ;
+
+    # block           -> "do" declaration* "end"
 
     # expr_stmt       -> expression "\n" ;
     # println_stmt    -> "println" expression "\n" ;
@@ -45,7 +47,8 @@ module Kaze
       statements = Array(Stmt).new
 
       until at_end?
-        statements.push(declaration.as(Stmt))
+        dec = declaration
+        statements.push(dec.as(Stmt)) unless dec.nil?
       end
 
       statements
@@ -68,6 +71,7 @@ module Kaze
 
     private def statement : Stmt
       return println_statement if match?(TT::PRINTLN)
+      return Stmt::Block.new(block) if match?(TT::DO)
       expression_statement
     end
 
@@ -93,6 +97,19 @@ module Kaze
       expr = expression
       consume_newline("Expect '\\n' after expression.")
       Stmt::Expression.new(expr)
+    end
+
+    private def block : Array(Stmt)
+      consume_newline("")
+      statements = Array(Stmt).new
+
+      until check?(TT::END) || at_end?
+        statements.push(declaration.as(Stmt))
+      end
+
+      consume(TT::END, "Expect \"end\" after block.")
+      consume_newline("") 
+      statements
     end
 
     private def assignment : Expr
@@ -274,7 +291,7 @@ module Kaze
     end
 
     private def error(token : Token, message : String) : ParseError
-      Kaze::Program.error(token, message)
+      Program.error(token, message)
       ParseError.new
     end
 

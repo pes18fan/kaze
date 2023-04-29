@@ -1,7 +1,7 @@
 var num = 69
 
-if num < 0
+if num < 0 do
   println "num is negative"
-else
+else do
   println "num is zero or positive"
 end

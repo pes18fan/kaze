@@ -35,6 +35,7 @@ module Kaze
     # Keywords.
     AND
     CLASS
+    DO
     ELSE
     END
     FALSE

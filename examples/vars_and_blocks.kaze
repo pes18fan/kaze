@@ -1,0 +1,15 @@
+var a = "hello!"
+println a
+
+do
+    var b = "hey!"
+    println b
+
+    do
+        var c = "helo!"
+        println c
+    end
+    println c
+end
+
+println b

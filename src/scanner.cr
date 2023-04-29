@@ -13,16 +13,23 @@ module Kaze
     # The starting point of each token.
     private property start = 0
 
-    # The current position of the scanner in a token.
+    # The current position of the scanner in the source.
     private property current = 0
 
     # The line where a token is present.
     private property line = 1
 
+    # The position of the scanner in a line.
+    private property line_current = 0
+
+    # True if the current line has either only whitespace or nothing.
+    private property line_is_empty = false
+
     # All of the reserved keywords.
     @@KEYWORDS : Hash(String, TT) = {
       "and"     => TT::AND,
       "class"   => TT::CLASS,
+      "do"      => TT::DO,
       "else"    => TT::ELSE,
       "end"     => TT::END,
       "false"   => TT::FALSE,
@@ -51,7 +58,7 @@ module Kaze
         @start = @current
         scan_token
 
-        return if Kaze::Program.had_error
+        return if Program.had_error
       end
 
       Program.loc = @line
@@ -85,7 +92,7 @@ module Kaze
       when '*'
         add_token(TT::STAR)
       when '/'
-        if (match?('*'))
+        if match?('*')
           until peek == '*' || at_end?
             advance
           end
@@ -105,7 +112,7 @@ module Kaze
           end
         end
 
-        if (match?('/'))
+        if match?('/')
           until peek == '\n' || at_end?
             advance
           end
@@ -129,10 +136,11 @@ module Kaze
       when '>'
         add_token(match?('=') ? TT::GREATER_EQUAL : TT::GREATER)
       when ' ', '\r', '\t'
+        
         # ignore whitespace
       when '\n'
-        add_token(TT::NEWLINE)
-        @line += 1
+        add_token(TT::NEWLINE) unless @line_current == 1
+        next_line
       when '"'
         string
       else
@@ -188,7 +196,7 @@ module Kaze
     private def string
       while peek != '"' && !at_end?
         if peek == '\n'
-          @line += 1
+          next_line
         end
         advance
       end
@@ -247,11 +255,23 @@ module Kaze
       @current >= @source.size
     end
 
-    # Increments @current by 1 and returns the current character.
+    # Returns true if the current line has either only a newline or whitespace.
+    private def line_is_empty? : Bool
+
+    end
+
+    # Consume a character.
     private def advance : Char
       old_curr = @current
       @current += 1
+      @line_current += 1
       return source[old_curr]
+    end
+
+    # Go to the next line.
+    private def next_line
+      @line_current = 0
+      @line += 1
     end
 
     # Adds a token without a literal.

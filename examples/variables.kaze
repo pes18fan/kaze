@@ -1,4 +1,0 @@
-var a = "hell yeah"
-println a
-a = "bruh moment"
-println a
