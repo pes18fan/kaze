@@ -35,12 +35,14 @@ module Kaze
     # Fires up a REPL.
     def run_prompt
       puts "Enter \".exit\" to exit"
+      i = 1
       loop do
-        print "> "
+        print "kaze:#{i}> "
         line = gets(chomp: true)
         break if line.nil? || line == ".exit"
         run(line.to_s, true)
         @@had_error = false
+        i += 1
       end
     end
 

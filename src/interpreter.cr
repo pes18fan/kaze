@@ -24,9 +24,11 @@ module Kaze
       begin
         # The < is used to check if a class inherits from or is inherited from a class that inherits from the other operand
         if statement.class < Stmt
-          execute statement.as(Stmt)
+          return_val = execute statement.as(Stmt)
+          puts return_stringify(return_val)
         else
-          puts stringify(evaluate statement.as(Expr))
+          return_val = evaluate statement.as(Expr)
+          puts return_stringify(return_val)
         end
       rescue err : RuntimeError
         Program.runtime_error(err)
@@ -163,6 +165,10 @@ module Kaze
       end
 
       return object.to_s
+    end
+
+    private def return_stringify(object : VG)
+      "=> #{stringify(object)}"
     end
 
     private def evaluate(expr : Expr)
