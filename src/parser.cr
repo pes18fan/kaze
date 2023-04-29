@@ -38,16 +38,26 @@ module Kaze
     end
 
     private getter tokens
+    private getter repl
     private property current = 0
 
-    def initialize(@tokens : Array(Token))
+    def initialize(@tokens : Array(Token), @repl : Bool)
     end
 
-    def parse : Array(Stmt)
+    def parse : Array(Stmt) | (Stmt | Expr)?
       statements = Array(Stmt).new
 
       until at_end?
         dec = declaration
+
+        if @repl
+          begin
+            return dec
+          rescue err : ParseError
+            return nil
+          end
+        end
+
         statements.push(dec.as(Stmt)) unless dec.nil?
       end
 
@@ -59,7 +69,7 @@ module Kaze
       assignment
     end
 
-    private def declaration : Stmt?
+    private def declaration : (Stmt | Expr)?
       begin
         return var_declaration if match?(TT::VAR)
         return statement
@@ -69,7 +79,7 @@ module Kaze
       end
     end
 
-    private def statement : Stmt
+    private def statement : Stmt | Expr
       return println_statement if match?(TT::PRINTLN)
       return Stmt::Block.new(block) if match?(TT::DO)
       expression_statement
@@ -93,8 +103,9 @@ module Kaze
       return Stmt::Var.new(name, initializer)
     end
 
-    private def expression_statement : Stmt
+    private def expression_statement : Stmt | Expr
       expr = expression
+      return expr if @repl
       consume_newline("Expect '\\n' after expression.")
       Stmt::Expression.new(expr)
     end

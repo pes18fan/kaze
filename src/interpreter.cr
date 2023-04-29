@@ -20,6 +20,19 @@ module Kaze
       end
     end
 
+    def interpret(statement : (Stmt | Expr)?)
+      begin
+        # The < is used to check if a class inherits from or is inherited from a class that inherits from the other operand
+        if statement.class < Stmt
+          execute statement.as(Stmt)
+        else
+          puts stringify(evaluate statement.as(Expr))
+        end
+      rescue err : RuntimeError
+        Program.runtime_error(err)
+      end
+    end
+
     def visit_literal_expr(expr : Expr::Literal) : VG
       expr.value
     end

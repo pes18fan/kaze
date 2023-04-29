@@ -27,7 +27,7 @@ module Kaze
     # Interprets a file.
     def run_file(path : String)
       data = File.read(path)
-      run(data)
+      run(data, false)
       exit 65 if @@had_error
       exit 70 if @@had_runtime_error
     end
@@ -39,19 +39,19 @@ module Kaze
         print "> "
         line = gets(chomp: true)
         break if line.nil? || line == ".exit"
-        run(line.to_s)
+        run(line.to_s, true)
         @@had_error = false
       end
     end
 
     # Sends `source` to the scanner to be scanned.
-    private def run(source : String)
+    private def run(source : String, repl : Bool)
       scanner = Scanner.new(source)
       tokens = scanner.scan_tokens
 
       return if @@had_error
 
-      parser = Parser.new(tokens.as(Array(Token)))
+      parser = Parser.new(tokens.as(Array(Token)), repl)
       statements = parser.parse
 
       return if @@had_error
