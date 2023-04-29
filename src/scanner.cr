@@ -54,12 +54,15 @@ module Kaze
         return if Kaze::Program.had_error
       end
 
+      Program.loc = @line
+      
       tokens.push(Token.new(TT::EOF, "", nil, @line))
       tokens
     end
 
     # Parses a token.
     private def scan_token
+      inside_comment = false
       c = advance
 
       case c
@@ -106,6 +109,8 @@ module Kaze
           until peek == '\n' || at_end?
             advance
           end
+
+          advance
         else
           add_token(TT::SLASH)
         end
@@ -136,7 +141,7 @@ module Kaze
         elsif alpha?(c)
           identifier
         else
-          Kaze::Program.error(@line, "Unexpected character.")
+          Program.error(@line, "Unexpected character.")
           return
         end
       end
@@ -182,7 +187,9 @@ module Kaze
     # Parses a string literal.
     private def string
       while peek != '"' && !at_end?
-        @line += 1 if peek == '\n'
+        if peek == '\n'
+          @line += 1
+        end
         advance
       end
 

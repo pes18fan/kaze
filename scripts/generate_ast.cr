@@ -6,15 +6,23 @@ end
 output_dir = ARGV[0]
 
 define_ast(output_dir, "expr", [
+  "Assign    $     name : Token, value : Expr",
   "Binary    $     left : Expr, operator : Token, right : Expr",
   "Grouping  $     expression : Expr",
-  "Literal   $     value : VisitorGenerics",
+  "Literal   $     value : VG",
   "Unary     $     operator : Token, right : Expr",
-  "Ternary   $     condition : Expr, left : Expr, right : Expr"
+  "Ternary   $     condition : Expr, left : Expr, right : Expr",
+  "Variable  $     name : Token"
 ], "(String | Float64 | Bool)?")
 
+define_ast(output_dir, "stmt", [
+  "Expression   $   expression : Expr",
+  "Println      $   expression : Expr",
+  "Var          $   name : Token, initializer : Expr?"
+])
+
 # Define the base AST class.
-private def define_ast(output_dir : String, file_name : String, types : Array(String), visitor_generics : String)
+private def define_ast(output_dir : String, file_name : String, types : Array(String), visitor_generics : String = "")
   path = output_dir + "/" + file_name + ".cr"
   base_name = file_name.capitalize
 
@@ -23,16 +31,18 @@ private def define_ast(output_dir : String, file_name : String, types : Array(St
     file.puts
 
     file.puts "module Kaze"
-    file.puts "  # Extendible abstract class for expressions."
+
+    unless visitor_generics.empty?
+      file.puts "  # All the types a visitor function can return."
+      file.puts "  alias VG = #{visitor_generics}"
+      file.puts
+    end
+
     file.puts "  abstract class #{base_name}"
 
-    file.puts "    # All the types a visitor function can return."
-    file.puts "    alias VisitorGenerics = #{visitor_generics}"
-    file.puts
-    
     define_visitor(file, base_name, types)
     file.puts
-    
+
     file.puts "    abstract def accept(visitor : Visitor)"
     file.puts
 
@@ -40,7 +50,7 @@ private def define_ast(output_dir : String, file_name : String, types : Array(St
       class_name = type.split("$")[0].strip
       fields = type.split("$")[1].strip
       define_type(file, base_name, class_name, fields)
-      file.puts
+      file.puts unless type == types.last
     end
 
     file.puts "  end" # abstract class closed
@@ -71,7 +81,7 @@ private def define_type(file : IO, base_name : String, class_name : String, fiel
 
     file.print "@#{field}, "
   end
-  
+
   file.print ")"
   file.puts
 
@@ -91,7 +101,7 @@ private def define_visitor(file : IO, base_name : String, types : Array(String))
 
   types.each do |type|
     type_name = type.split("$")[0].strip
-    file.puts "      abstract def visit_#{type_name.downcase}_#{base_name.downcase}(#{base_name.downcase} : #{type_name}) : VisitorGenerics"
+    file.puts "      abstract def visit_#{type_name.downcase}_#{base_name.downcase}(#{base_name.downcase} : #{type_name}) : VG"
   end
 
   file.puts "    end"

@@ -1,2 +1,4 @@
-var a = "poggers"
-val c = "this is constant"
+var a = "hell yeah"
+println a
+a = "bruh moment"
+println a

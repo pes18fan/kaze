@@ -39,6 +39,16 @@ module Kaze
       parenthesize("?:", expr.condition, expr.left, expr.right)
     end
 
+    # Parenthesizes a variable expression.
+    def visit_variable_expr(expr : Expr::Variable) : String
+      parenthesize("var", var.name)
+    end
+
+    # Parenthesizes an assignment.
+    def visit_assign_expr(expr : Expr::Assign) : String
+      parenthesize("=", expr.name, expr.value)
+    end
+
     # Encapsulates an expression in parentheses as a part of the final S-expression.
     private def parenthesize(name : String, *exprs : Expr)
       String.build do |str|

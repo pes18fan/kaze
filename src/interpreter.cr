@@ -1,18 +1,20 @@
 require "./expr"
+require "./environment"
 require "./runtime_error"
 
 module Kaze
-  alias VG = Expr::VisitorGenerics
-
-  # Interpreter to compute expressions.
+  # Interpreter to compute expressions and statements.
   class Interpreter
     include Expr::Visitor
+    include Stmt::Visitor
 
-    def interpret(expression : Expr)
+    private property environment = Environment.new
+
+    def interpret(statements : Array(Stmt))
       begin
-        value = evaluate(expression) 
-
-        puts stringify(value)
+        statements.each do |statement|
+          execute statement
+        end
       rescue err : RuntimeError
         Kaze::Program.runtime_error(err)
       end
@@ -99,6 +101,16 @@ module Kaze
 
       nil
     end
+    
+    def visit_variable_expr(expr : Expr::Variable) : VG
+      environment.get(expr.name)
+    end
+
+    def visit_assign_expr(expr : Expr::Assign) : VG
+      value = evaluate(expr.value)
+      environment.assign(expr.name, value)
+      value
+    end
 
     private def check_number_operand(operator : Token, operand : VG)
       return if operand.class == Float64
@@ -142,6 +154,32 @@ module Kaze
 
     private def evaluate(expr : Expr)
       expr.accept(self)
+    end
+
+    private def execute(stmt : Stmt)
+      stmt.accept(self)
+    end
+
+    def visit_expression_stmt(stmt : Stmt::Expression) : Nil
+      evaluate(stmt.expression)
+      nil
+    end
+
+    def visit_println_stmt(stmt : Stmt::Println) : Nil
+      value = evaluate(stmt.expression)
+      puts stringify(value)
+      nil
+    end
+
+    def visit_var_stmt(stmt : Stmt::Var) : Nil
+      value : VG = nil
+
+      unless stmt.initializer.nil?
+        value = evaluate(stmt.initializer.as(Expr))
+      end
+
+      environment.define(stmt.name.lexeme, value)
+      nil
     end
   end
 end

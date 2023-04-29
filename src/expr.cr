@@ -1,19 +1,33 @@
 require "./token"
 
 module Kaze
-  abstract class Expr
-    # All the types a visitor function can return.
-    alias VisitorGenerics = (String | Float64 | Bool)?
+  # All the types a visitor function can return.
+  alias VG = (String | Float64 | Bool)?
 
+  abstract class Expr
     module Visitor
-      abstract def visit_binary_expr(expr : Binary) : VisitorGenerics
-      abstract def visit_grouping_expr(expr : Grouping) : VisitorGenerics
-      abstract def visit_literal_expr(expr : Literal) : VisitorGenerics
-      abstract def visit_unary_expr(expr : Unary) : VisitorGenerics
-      abstract def visit_ternary_expr(expr : Ternary) : VisitorGenerics
+      abstract def visit_assign_expr(expr : Assign) : VG
+      abstract def visit_binary_expr(expr : Binary) : VG
+      abstract def visit_grouping_expr(expr : Grouping) : VG
+      abstract def visit_literal_expr(expr : Literal) : VG
+      abstract def visit_unary_expr(expr : Unary) : VG
+      abstract def visit_ternary_expr(expr : Ternary) : VG
+      abstract def visit_variable_expr(expr : Variable) : VG
     end
 
     abstract def accept(visitor : Visitor)
+
+    class Assign < Expr
+      getter name
+      getter value
+
+      def initialize(@name : Token, @value : Expr)
+      end
+
+      def accept(visitor : Visitor)
+        visitor.visit_assign_expr(self)
+      end
+    end
 
     class Binary < Expr
       getter left
@@ -42,7 +56,7 @@ module Kaze
     class Literal < Expr
       getter value
 
-      def initialize(@value : VisitorGenerics)
+      def initialize(@value : VG)
       end
 
       def accept(visitor : Visitor)
@@ -72,6 +86,17 @@ module Kaze
 
       def accept(visitor : Visitor)
         visitor.visit_ternary_expr(self)
+      end
+    end
+
+    class Variable < Expr
+      getter name
+
+      def initialize(@name : Token)
+      end
+
+      def accept(visitor : Visitor)
+        visitor.visit_variable_expr(self)
       end
     end
   end

@@ -11,6 +11,7 @@ module Kaze
     @@interpreter = Interpreter.new
     @@had_error = false
     @@had_runtime_error = false
+    @@loc = 1
 
     def initialize
       if ARGV.size > 1
@@ -51,12 +52,11 @@ module Kaze
       return if @@had_error
 
       parser = Parser.new(tokens.as(Array(Token)))
-      expression = parser.parse
+      statements = parser.parse
 
       return if @@had_error
       
-      # puts AstPrinter.new.stringify(expression.as(Expr)) unless expression.nil?
-      @@interpreter.interpret(expression.as(Expr))
+      @@interpreter.interpret(statements)
     end
 
     # Reports an error with a token.
@@ -86,6 +86,14 @@ module Kaze
 
     def self.had_error
       @@had_error
+    end
+
+    def self.loc
+      @@loc
+    end
+
+    def self.loc=(other : Int32)
+      @@loc = other
     end
   end
 end

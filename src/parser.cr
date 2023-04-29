@@ -1,9 +1,36 @@
 require "./token"
 require "./expr"
+require "./stmt"
 
 module Kaze
   # The language parser.
   class Parser
+    # Expression grammar:
+    # expression      -> assignment ;
+
+    # assignment      -> IDENTIFIER "=" assignment | ternary ;
+    # ternary         -> ( equality "?" difference ":" difference ) | equality ;
+    # equality        -> comparison ( ( "!=" | "==" ) comparison )* ;
+    # comparison      -> difference ( ( "<" | "<=" | ">=" | ">" ) difference )* ;
+    # difference      -> sum ( "-" sum )* ;
+    # sum             -> difference ( "+" difference )* ;
+    # product         -> quotient ( "*" quotient )* ;
+    # quotient        -> unary ( "/" unary )*
+    # unary           -> ( "!" | "-" ) unary | primary ;
+    # primary         -> NUMBER | STRING | IDENTIFIER | "true" | "false" | "nil" | "(" expression ")" ;
+
+    # Parser grammar:
+    # program         -> declaration* EOF ;
+
+    # declaration     -> var_decl | statement ;
+
+    # var_decl        -> "var" IDENTIFIER ( "=" expression )? "\n" ;
+
+    # statement       -> expr_stmt | println_stmt ;
+
+    # expr_stmt       -> expression "\n" ;
+    # println_stmt    -> "println" expression "\n" ;
+
     # An exception that occured when parsing the source.
     private class ParseError < Exception
     end
@@ -14,17 +41,76 @@ module Kaze
     def initialize(@tokens : Array(Token))
     end
 
-    def parse : Expr?
-      begin
-        return expression
-      rescue err : ParseError
-        return nil
+    def parse : Array(Stmt)
+      statements = Array(Stmt).new
+
+      until at_end?
+        statements.push(declaration.as(Stmt))
       end
+
+      statements
     end
 
     # Returns the parsed expression.
     private def expression : Expr
-      ternary
+      assignment
+    end
+
+    private def declaration : Stmt?
+      begin
+        return var_declaration if match?(TT::VAR)
+        return statement
+      rescue err : ParseError
+        synchronize
+        return nil
+      end
+    end
+
+    private def statement : Stmt
+      return println_statement if match?(TT::PRINTLN)
+      expression_statement
+    end
+
+    private def println_statement : Stmt
+      expr = expression
+      consume_newline("Expect '\\n' after expression.")
+      Stmt::Println.new(expr)
+    end
+
+    private def var_declaration : Stmt
+      name = consume(TT::IDENTIFIER, "Expect variable name.")
+
+      initializer : Expr? = nil
+      if match?(TT::EQUAL)
+        initializer = expression
+      end
+
+      consume_newline("Expect \"\\n\" after variable declaration.")
+      return Stmt::Var.new(name, initializer)
+    end
+
+    private def expression_statement : Stmt
+      expr = expression
+      consume_newline("Expect '\\n' after expression.")
+      Stmt::Expression.new(expr)
+    end
+
+    private def assignment : Expr
+      expr = equality
+
+      if match?(TT::EQUAL)
+        equals = previous
+        value = assignment
+
+        if expr.class == Expr::Variable
+          name = expr.as(Expr::Variable).name
+          return Expr::Assign.new(name, value)
+        end
+
+        raise error(equals, "Invalid assignment target.")
+      end
+
+      expr
     end
 
     private def ternary : Expr
@@ -65,7 +151,7 @@ module Kaze
       expr
     end
 
-    private def difference : Expr 
+    private def difference : Expr
       expr = sum
 
       while match?(TT::MINUS)
@@ -77,7 +163,7 @@ module Kaze
       expr
     end
 
-    private def sum : Expr 
+    private def sum : Expr
       expr = product
 
       while match?(TT::PLUS)
@@ -89,7 +175,7 @@ module Kaze
       expr
     end
 
-    private def product : Expr 
+    private def product : Expr
       expr = quotient
 
       while match?(TT::STAR)
@@ -101,7 +187,7 @@ module Kaze
       expr
     end
 
-    private def quotient : Expr 
+    private def quotient : Expr
       expr = unary
 
       while match?(TT::SLASH)
@@ -125,13 +211,15 @@ module Kaze
     end
 
     private def primary : Expr
+      # Return false, true or nil.
       return Expr::Literal.new(false) if match?(TT::FALSE)
       return Expr::Literal.new(true) if match?(TT::TRUE)
       return Expr::Literal.new(nil) if match?(TT::NIL)
 
-      if match?(TT::NUMBER, TT::STRING)
-        return Expr::Literal.new(previous.literal)
-      end
+      # Return the literal value.
+      return Expr::Literal.new(previous.literal) if match?(TT::NUMBER, TT::STRING)
+
+      return Expr::Variable.new(previous) if match?(TT::IDENTIFIER)
 
       if match?(TT::LEFT_PAREN)
         expr = expression
@@ -157,6 +245,10 @@ module Kaze
       return advance if check?(type)
 
       raise error(peek, message)
+    end
+
+    private def consume_newline(message : String) : Token?
+      consume(TT::NEWLINE, message) unless Program.loc == 1 || peek.type == TT::EOF
     end
 
     private def check?(type : TT) : Bool
