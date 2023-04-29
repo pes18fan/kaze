@@ -96,7 +96,7 @@ module Kaze
     end
 
     private def assignment : Expr
-      expr = equality
+      expr = ternary
 
       if match?(TT::EQUAL)
         equals = previous
