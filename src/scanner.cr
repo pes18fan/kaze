@@ -47,8 +47,7 @@ module Kaze
       "while"   => TT::WHILE,
     }
 
-    def initialize(source : String)
-      @source = source
+    def initialize(@source : String)
     end
 
     # Scans the file for tokens until the end of the file.
@@ -136,7 +135,6 @@ module Kaze
       when '>'
         add_token(match?('=') ? TT::GREATER_EQUAL : TT::GREATER)
       when ' ', '\r', '\t'
-        
         # ignore whitespace
       when '\n'
         add_token(TT::NEWLINE) unless @line_current == 1
@@ -210,7 +208,7 @@ module Kaze
       advance
 
       # trim the surrounding quotes
-      value = source[(@start + 1)...(@current - 1)]
+      value = @source[(@start + 1)...(@current - 1)]
       add_token(TT::STRING, value)
     end
 
@@ -253,11 +251,6 @@ module Kaze
     # Returns true if @current is higher than the size of the @source.
     private def at_end? : Bool
       @current >= @source.size
-    end
-
-    # Returns true if the current line has either only a newline or whitespace.
-    private def line_is_empty? : Bool
-
     end
 
     # Consume a character.
