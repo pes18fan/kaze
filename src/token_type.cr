@@ -13,6 +13,7 @@ module Kaze
     NEWLINE
     PLUS
     QUESTION
+    SEMICOLON
     SLASH
     STAR
 

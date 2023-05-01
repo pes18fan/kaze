@@ -1,7 +1,3 @@
 var num = -1
 
-if num < 0 begin
-  println "num is negative"
-else
-  println "num is zero or positive"
-end
+if num < 0 then println "bruh"

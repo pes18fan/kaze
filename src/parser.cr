@@ -28,26 +28,32 @@ module Kaze
 
     # var_decl        -> "var" IDENTIFIER ( "=" expression )? "\n" ;
 
-    # statement       -> expr_stmt | if_stmt | println_stmt | block ;
+    # statement       -> expr_stmt | for_stmt | if_stmt | println_stmt | while_stmt | block ;
 
     # if_stmt         -> "if" expression "then" statement ( "else" statement )? ;
-    # block           -> "begin" declaration* "end"
     # expr_stmt       -> expression "\n" ;
+    # for_stmt        -> "for" ( var_decl | expr_stmt )? ";" expression? ";" expression ( "do" statement | block ) ;
     # println_stmt    -> "println" expression "\n" ;
+    # while_stmt      -> "while" expression ( "do" statement | block ) ;
+    # block           -> "begin" declaration* "end"
 
     # An exception that occured when parsing the source.
     private class ParseError < Exception
     end
 
+    # Tokens obtained from the scanner.
     private getter tokens
+
+    # True if in a REPL session.
     private getter repl
-    private getter implicit_begin_at = [
-      TT::ELSE
-    ]
-    private getter implicit_end_at = [
+
+    # Tokens to implcitly end a block at.
+    private getter implicit_end_block_at = [
       TT::EOF,
       TT::ELSE,
     ]
+
+    # Current position of the parser in the token list.
     private property current = 0
 
     def initialize(@tokens : Array(Token), @repl : Bool)
@@ -89,10 +95,65 @@ module Kaze
     end
 
     private def statement : Stmt | Expr
+      return for_statement if match?(TT::FOR)
       return if_statement if match?(TT::IF)
       return println_statement if match?(TT::PRINTLN)
+      return while_statement if match?(TT::WHILE)
       return Stmt::Block.new(block) if match?(TT::BEGIN)
       expression_statement
+    end
+
+    # Parses a for loop by desugaring it into a while loop.
+    private def for_statement : Stmt
+      initializer = uninitialized (Stmt | Expr)?
+
+      if match?(TT::SEMICOLON)
+        initializer = nil
+      elsif match?(TT::VAR)
+        initializer = var_declaration(true)
+      else
+        initializer = expression_statement(true)
+      end
+      consume(TT::SEMICOLON, "Expect \";\".")
+
+      condition : Expr? = nil
+      unless check?(TT::SEMICOLON)
+        condition = expression
+      end
+      consume(TT::SEMICOLON, "Expect \";\" after loop condition.")
+
+      increment : Expr? = nil
+      unless check?(TT::DO) || check?(TT::BEGIN)
+        increment = expression
+      end
+      consume(TT::DO, "Expect \"do\" or \"begin\" after for clauses.") unless check?(TT::BEGIN)
+
+      body = as_stmt(statement, "Expect statement.")
+
+      if increment != nil
+        body = Stmt::Block.new(
+          [
+            body,
+            Stmt::Expression.new(increment.as(Expr))
+          ]
+        )
+      end
+
+      if condition == nil
+        condition = Expr::Literal.new(true)
+      end
+      body = Stmt::While.new(condition.as(Expr), body)
+
+      if initializer != nil
+        body = Stmt::Block.new(
+          [
+            as_stmt(initializer, "Expect initializer to be statement."),
+            body
+          ]
+        )
+      end
+
+      body
     end
 
     private def if_statement : Stmt
@@ -117,11 +178,11 @@ module Kaze
 
     private def println_statement : Stmt
       expr = expression
-      consume_newline("Expect '\\n' after expression.")
+      consume_newline("Expect \"\\n\" after expression.")
       Stmt::Println.new(expr)
     end
 
-    private def var_declaration : Stmt
+    private def var_declaration(no_consume_newline : Bool = false) : Stmt
       name = consume(TT::IDENTIFIER, "Expect variable name.")
 
       initializer : Expr? = nil
@@ -129,14 +190,24 @@ module Kaze
         initializer = expression
       end
 
-      consume_newline("Expect \"\\n\" after variable declaration.")
+      consume_newline("Expect \"\\n\" after variable declaration.") unless no_consume_newline
       return Stmt::Var.new(name, initializer)
     end
 
-    private def expression_statement : Stmt | Expr
+    private def while_statement : Stmt
+      condition = expression
+
+      consume(TT::DO, "Expect \"do\" or \"begin\" after condition.") unless check?(TT::BEGIN)
+
+      body = as_stmt(statement, "Expect statement.")
+
+      Stmt::While.new(condition, body)
+    end
+
+    private def expression_statement(no_consume_newline : Bool = false) : Stmt | Expr
       expr = expression
       return expr if @repl
-      consume_newline("Expect '\\n' after expression.")
+      consume_newline("Expect \"\\n\" after expression.") unless no_consume_newline
       Stmt::Expression.new(expr)
     end
 
@@ -145,7 +216,8 @@ module Kaze
       statements = Array(Stmt).new
 
       until check?(TT::END) || at_end?
-        if !!(@implicit_end_at.find { |i| i == peek_next.type || i == peek.type })
+        # Return early if a token requring an implicit end (for example, "else") was found.
+        if implicit_end_block_needed?
           return statements
         end
         
@@ -331,6 +403,10 @@ module Kaze
       return false
     end
 
+    private def implicit_end_block_needed? : Bool
+      !!(@implicit_end_block_at.find { |i| i == peek.type } )
+    end
+
     private def consume(type : TT, message : String) : Token
       return advance if check?(type)
 
@@ -338,7 +414,7 @@ module Kaze
     end
 
     private def consume_newline(message : String) : Token?
-      consume(TT::NEWLINE, message) unless Program.loc == 1 || !!(@implicit_end_at.find { |i| i == peek.type })
+      consume(TT::NEWLINE, message) unless Program.loc == 1 || implicit_end_block_needed?
     end
 
     private def as_stmt(stmt : (Stmt | Expr)?, message : String)
@@ -365,10 +441,6 @@ module Kaze
 
     private def peek : Token
       @tokens[current]
-    end
-
-    private def peek_next : Token
-      @tokens[current + 1]
     end
 
     private def previous : Token

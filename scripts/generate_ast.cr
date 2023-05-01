@@ -21,7 +21,8 @@ define_ast(output_dir, "stmt", [
   "Expression   $   expression : Expr",
   "If           $   condition : Expr, then_branch : Stmt, else_branch : Stmt?",
   "Println      $   expression : Expr",
-  "Var          $   name : Token, initializer : Expr?"
+  "Var          $   name : Token, initializer : Expr?",
+  "While        $   condition : Expr, body : Stmt"
 ])
 
 # Define the base AST class.

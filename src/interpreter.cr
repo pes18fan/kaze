@@ -10,6 +10,7 @@ module Kaze
 
     private property environment = Environment.new
 
+    # Interprets a source file.
     def interpret(statements : Array(Stmt))
       begin
         statements.each do |statement|
@@ -20,6 +21,7 @@ module Kaze
       end
     end
 
+    # Overload used for REPL sessions, to allow usage of both statements and expressions.
     def interpret(statement : (Stmt | Expr)?)
       begin
         # The < is used to check if a class inherits from or is inherited from a class that inherits from the other operand
@@ -240,6 +242,12 @@ module Kaze
 
       environment.define(stmt.name.lexeme, value)
       nil
+    end
+
+    def visit_while_stmt(stmt : Stmt::While) : Nil
+      while truthy?(evaluate stmt.condition)
+        execute stmt.body
+      end
     end
   end
 end

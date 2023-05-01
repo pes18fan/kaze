@@ -26,7 +26,12 @@ module Kaze
 
     # Interprets a file.
     def run_file(path : String)
-      data = File.read(path)
+      begin
+        data = File.read(path)
+      rescue err : File::NotFoundError
+        STDERR.puts "File #{path} not found."
+        exit 66
+      end
       run(data, false)
       exit 65 if @@had_error
       exit 70 if @@had_runtime_error
@@ -34,7 +39,8 @@ module Kaze
 
     # Fires up a REPL.
     def run_prompt
-      puts "Enter \".exit\" to exit"
+      puts "Kaze interpreter."
+      puts "Enter \".exit\" to exit."
       i = 1
       loop do
         print "kaze:#{i}> "

@@ -23,7 +23,7 @@ kaze
 You need the following to build Kaze:
 
 - [`crystal`](https://crystal-lang.org/install): The language in which the interpreter is written.
-- [`just`](https://www.github.com/casey/just): A build tool similar to `make`. Note that on Windows, you'll need a `sh` like Git Bash to use it.
+- [`just`](https://www.github.com/casey/just): A command runner with syntax similar to `make`, used as the build tool. Note that on Windows, you'll need a `sh` like Git Bash to use it.
 
 Run the following to build a development build for Kaze!
 

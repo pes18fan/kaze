@@ -8,6 +8,7 @@ module Kaze
       abstract def visit_if_stmt(stmt : If) : VG
       abstract def visit_println_stmt(stmt : Println) : VG
       abstract def visit_var_stmt(stmt : Var) : VG
+      abstract def visit_while_stmt(stmt : While) : VG
     end
 
     abstract def accept(visitor : Visitor)
@@ -67,6 +68,18 @@ module Kaze
 
       def accept(visitor : Visitor)
         visitor.visit_var_stmt(self)
+      end
+    end
+
+    class While < Stmt
+      getter condition
+      getter body
+
+      def initialize(@condition : Expr, @body : Stmt)
+      end
+
+      def accept(visitor : Visitor)
+        visitor.visit_while_stmt(self)
       end
     end
   end

@@ -82,6 +82,8 @@ module Kaze
         add_token(TT::QUESTION)
       when ':'
         add_token(TT::COLON)
+      when ';'
+        add_token(TT::SEMICOLON)
       when ','
         add_token(TT::COMMA)
       when '.'
