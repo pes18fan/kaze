@@ -11,6 +11,7 @@ module Kaze
     DOT
     MINUS
     NEWLINE
+    PERCENT
     PLUS
     QUESTION
     SEMICOLON

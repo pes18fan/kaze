@@ -124,6 +124,8 @@ module Kaze
         else
           add_token(TT::SLASH)
         end
+      when '%'
+        add_token(TT::PERCENT)
       when '!'
         add_token(match?('=') ? TT::BANG_EQUAL : TT::BANG)
       when '='

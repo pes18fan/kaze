@@ -1,3 +1,15 @@
-for var i = 0; i < 10; i = i + 1 begin
-  println "lol"
+var num = 111
+var num_used = num
+var rev = 0
+var rem
+
+while num_used != 0 begin
+  rem = num_used % 10
+  rev = ( rev * 10 ) + rem
+  num_used = num_used / 10
 end
+
+println rev
+println num
+println "Is it a palindrome?"
+println rev == num

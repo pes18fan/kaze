@@ -112,6 +112,11 @@ module Kaze
         return left.as(Float64) / right.as(Float64) if right.as(Float64) != 0
 
         raise RuntimeError.new(expr.operator, "Cannot divide by zero.")
+      when TT::PERCENT
+        check_number_operand(expr.operator, left, right)
+        return left.as(Float64) % right.as(Float64) if right.as(Float64) != 0
+
+        raise RuntimeError.new(expr.operator, "Cannot divide by zero.")
       when TT::STAR
         check_number_operand(expr.operator, left, right)
         return left.as(Float64) * right.as(Float64)

@@ -17,7 +17,8 @@ module Kaze
     # difference      -> sum ( "-" sum )* ;
     # sum             -> difference ( "+" difference )* ;
     # product         -> quotient ( "*" quotient )* ;
-    # quotient        -> unary ( "/" unary )*
+    # quotient        -> modulo ( "/" modulo )* ;
+    # modulo          -> unary ( "%" unary )* ;
     # unary           -> ( "!" | "-" ) unary | primary ;
     # primary         -> NUMBER | STRING | IDENTIFIER | "true" | "false" | "nil" | "(" expression ")" ;
 
@@ -114,7 +115,7 @@ module Kaze
       else
         initializer = expression_statement(true)
       end
-      consume(TT::SEMICOLON, "Expect \";\".")
+      consume(TT::SEMICOLON, "Expect \";\".") unless previous.type == TT::SEMICOLON
 
       condition : Expr? = nil
       unless check?(TT::SEMICOLON)
@@ -350,9 +351,22 @@ module Kaze
     end
 
     private def quotient : Expr
-      expr = unary
+      expr = modulo
 
       while match?(TT::SLASH)
+        operator = previous
+        right = modulo
+
+        expr = Expr::Binary.new(expr, operator, right)
+      end
+
+      expr
+    end
+
+    private def modulo : Expr
+      expr = unary
+
+      while match?(TT::PERCENT)
         operator = previous
         right = unary
 
