@@ -10,6 +10,7 @@ define_ast(output_dir, "expr", [
   "Binary    $     left : Expr, operator : Token, right : Expr",
   "Grouping  $     expression : Expr",
   "Literal   $     value : VG",
+  "Logical   $     left : Expr, operator : Token, right : Expr",
   "Unary     $     operator : Token, right : Expr",
   "Ternary   $     condition : Expr, left : Expr, right : Expr",
   "Variable  $     name : Token"
@@ -18,6 +19,7 @@ define_ast(output_dir, "expr", [
 define_ast(output_dir, "stmt", [
   "Block        $   statements : Array(Stmt)",
   "Expression   $   expression : Expr",
+  "If           $   condition : Expr, then_branch : Stmt, else_branch : Stmt?",
   "Println      $   expression : Expr",
   "Var          $   name : Token, initializer : Expr?"
 ])

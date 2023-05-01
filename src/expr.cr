@@ -10,6 +10,7 @@ module Kaze
       abstract def visit_binary_expr(expr : Binary) : VG
       abstract def visit_grouping_expr(expr : Grouping) : VG
       abstract def visit_literal_expr(expr : Literal) : VG
+      abstract def visit_logical_expr(expr : Logical) : VG
       abstract def visit_unary_expr(expr : Unary) : VG
       abstract def visit_ternary_expr(expr : Ternary) : VG
       abstract def visit_variable_expr(expr : Variable) : VG
@@ -61,6 +62,19 @@ module Kaze
 
       def accept(visitor : Visitor)
         visitor.visit_literal_expr(self)
+      end
+    end
+
+    class Logical < Expr
+      getter left
+      getter operator
+      getter right
+
+      def initialize(@left : Expr, @operator : Token, @right : Expr)
+      end
+
+      def accept(visitor : Visitor)
+        visitor.visit_logical_expr(self)
       end
     end
 

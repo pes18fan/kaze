@@ -39,6 +39,18 @@ module Kaze
       expr.value
     end
 
+    def visit_logical_expr(expr : Expr::Logical) : VG
+      left = evaluate expr.left
+
+      if expr.operator.type == TT::OR
+        return left if truthy?(left)
+      else
+        return left unless truthy?(left)
+      end
+
+      evaluate expr.right
+    end
+
     def visit_grouping_expr(expr : Expr::Grouping) : VG
       evaluate(expr.expression)
     end
@@ -200,6 +212,16 @@ module Kaze
 
     def visit_expression_stmt(stmt : Stmt::Expression) : Nil
       evaluate(stmt.expression)
+      nil
+    end
+
+    def visit_if_stmt(stmt : Stmt::If) : Nil
+      if truthy?(evaluate stmt.condition)
+        execute stmt.then_branch
+      elsif stmt.else_branch != nil
+        execute stmt.else_branch.as(Stmt)
+      end
+
       nil
     end
 

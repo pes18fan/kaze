@@ -28,6 +28,7 @@ module Kaze
     # All of the reserved keywords.
     @@KEYWORDS : Hash(String, TT) = {
       "and"     => TT::AND,
+      "begin"   => TT::BEGIN,
       "class"   => TT::CLASS,
       "do"      => TT::DO,
       "else"    => TT::ELSE,
@@ -41,6 +42,7 @@ module Kaze
       "println" => TT::PRINTLN,
       "return"  => TT::RETURN,
       "super"   => TT::SUPER,
+      "then"    => TT::THEN,
       "this"    => TT::THIS,
       "true"    => TT::TRUE,
       "var"     => TT::VAR,

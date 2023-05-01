@@ -49,6 +49,10 @@ module Kaze
       parenthesize("=", expr.name, expr.value)
     end
 
+    def visit_logical_expr(expr : Expr::Logical) : String
+      parenthesize(expr.operator.lexeme, expr.left.name, expr.right.name)
+    end
+
     # Encapsulates an expression in parentheses as a part of the final S-expression.
     private def parenthesize(name : String, *exprs : Expr)
       String.build do |str|

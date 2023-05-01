@@ -34,6 +34,7 @@ module Kaze
 
     # Keywords.
     AND
+    BEGIN
     CLASS
     DO
     ELSE
@@ -47,6 +48,7 @@ module Kaze
     PRINTLN
     RETURN
     SUPER
+    THEN
     THIS
     TRUE
     VAR

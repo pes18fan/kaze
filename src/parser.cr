@@ -9,7 +9,9 @@ module Kaze
     # expression      -> assignment ;
 
     # assignment      -> IDENTIFIER "=" assignment | ternary ;
-    # ternary         -> ( equality "?" difference ":" difference ) | equality ;
+    # ternary         -> ( logic_or "?" difference ":" difference ) | logic_or ;
+    # logic_or        -> logic_and ( "or" logic_and )* ;
+    # logic_and       -> equality ( "and" equality )* ;
     # equality        -> comparison ( ( "!=" | "==" ) comparison )* ;
     # comparison      -> difference ( ( "<" | "<=" | ">=" | ">" ) difference )* ;
     # difference      -> sum ( "-" sum )* ;
@@ -26,10 +28,10 @@ module Kaze
 
     # var_decl        -> "var" IDENTIFIER ( "=" expression )? "\n" ;
 
-    # statement       -> expr_stmt | println_stmt | block ;
+    # statement       -> expr_stmt | if_stmt | println_stmt | block ;
 
-    # block           -> "do" declaration* "end"
-
+    # if_stmt         -> "if" expression "then" statement ( "else" statement )? ;
+    # block           -> "begin" declaration* "end"
     # expr_stmt       -> expression "\n" ;
     # println_stmt    -> "println" expression "\n" ;
 
@@ -39,6 +41,13 @@ module Kaze
 
     private getter tokens
     private getter repl
+    private getter implicit_begin_at = [
+      TT::ELSE
+    ]
+    private getter implicit_end_at = [
+      TT::EOF,
+      TT::ELSE,
+    ]
     private property current = 0
 
     def initialize(@tokens : Array(Token), @repl : Bool)
@@ -80,9 +89,30 @@ module Kaze
     end
 
     private def statement : Stmt | Expr
+      return if_statement if match?(TT::IF)
       return println_statement if match?(TT::PRINTLN)
-      return Stmt::Block.new(block) if match?(TT::DO)
+      return Stmt::Block.new(block) if match?(TT::BEGIN)
       expression_statement
+    end
+
+    private def if_statement : Stmt
+      condition = expression
+      in_block = check?(TT::BEGIN)
+
+      consume(TT::THEN, "Expect \"then\" or \"begin\" after if condition.") unless in_block
+
+      then_branch = as_stmt(statement, "Expect statement.")
+      else_branch = nil
+
+      if match?(TT::ELSE)
+        if in_block
+          else_branch = Stmt::Block.new(block)
+        else
+          else_branch = as_stmt(statement, "Expect statement.")
+        end
+      end
+
+      Stmt::If.new(condition, then_branch, else_branch)
     end
 
     private def println_statement : Stmt
@@ -115,12 +145,20 @@ module Kaze
       statements = Array(Stmt).new
 
       until check?(TT::END) || at_end?
-        statements.push(declaration.as(Stmt))
+        if !!(@implicit_end_at.find { |i| i == peek_next.type || i == peek.type })
+          return statements
+        end
+        
+        statements.push(as_stmt(declaration, "Expect statement."))
       end
 
-      consume(TT::END, "Expect \"end\" after block.")
-      consume_newline("") 
+      end_block
       statements
+    end
+
+    private def end_block
+      consume(TT::END, "Expect \"end\" after block.")
+      consume_newline("")
     end
 
     private def assignment : Expr
@@ -142,7 +180,7 @@ module Kaze
     end
 
     private def ternary : Expr
-      expr = equality
+      expr = or
 
       if match?(TT::QUESTION)
         left = difference
@@ -150,6 +188,30 @@ module Kaze
         right = difference
 
         return Expr::Ternary.new(expr, left, right)
+      end
+
+      expr
+    end
+
+    private def or : Expr
+      expr = and
+
+      while match?(TT::OR)
+        operator = previous
+        right = and
+        expr = Expr::Logical.new(expr, operator, right)
+      end
+
+      expr
+    end
+
+    private def and : Expr
+      expr = equality
+
+      while match?(TT::AND)
+        operator = previous
+        right = equality
+        expr = Expr::Logical.new(expr, operator, right)
       end
 
       expr
@@ -276,7 +338,15 @@ module Kaze
     end
 
     private def consume_newline(message : String) : Token?
-      consume(TT::NEWLINE, message) unless Program.loc == 1 || peek.type == TT::EOF
+      consume(TT::NEWLINE, message) unless Program.loc == 1 || !!(@implicit_end_at.find { |i| i == peek.type })
+    end
+
+    private def as_stmt(stmt : (Stmt | Expr)?, message : String)
+      begin
+        return stmt.as(Stmt)
+      rescue err : TypeCastError
+        raise error(peek, message)
+      end
     end
 
     private def check?(type : TT) : Bool
@@ -295,6 +365,10 @@ module Kaze
 
     private def peek : Token
       @tokens[current]
+    end
+
+    private def peek_next : Token
+      @tokens[current + 1]
     end
 
     private def previous : Token

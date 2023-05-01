@@ -1,10 +1,10 @@
 var a = 1
 
-while a <= 10 do
+while a <= 10 begin
   println "epic"
   a = a + 1
 end
 
-for var i = 1 to 100 do
+for var i = 1 to 100 begin
   println i
 end

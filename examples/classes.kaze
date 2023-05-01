@@ -1,14 +1,14 @@
-class Breakfast do
-    init <- meat, bun do
+class Breakfast begin
+    init <- meat, bun begin
         this.meat = meat
         this.bun = bun
     end
 
-    cook do
+    cook begin
         println "eggs fryin"
     end
 
-    serve <- who do
+    serve <- who begin
         println "Enjoy the breakfast, #{who}."
     end
 end
@@ -25,13 +25,13 @@ breakfast.bread = "bun"
 var sausage_and_bun = Breakfast("sausage", "bun")
 sausage_and_bun.serve("Dear Reader")
 
-class Brunch < Breakfast do
-    init <- meat, bread, drink do
+class Brunch < Breakfast begin
+    init <- meat, bread, drink begin
         super.init(meat, bread)
         this.drink = drink
     end
 
-    drink do
+    drink begin
         println "a bloody mary?"
     end
 end

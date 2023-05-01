@@ -1,11 +1,11 @@
 var a = "hello!"
 println a
 
-do
+begin
     var b = "hey!"
     println b
 
-    do
+    begin
         var c = "helo!"
         println c
     end
