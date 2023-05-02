@@ -1,6 +1,10 @@
 require "./expr"
+require "./stmt"
 require "./environment"
 require "./runtime_error"
+require "./callable"
+require "./yawaraka"
+require "./function"
 
 module Kaze
   # Interpreter to compute expressions and statements.
@@ -8,7 +12,14 @@ module Kaze
     include Expr::Visitor
     include Stmt::Visitor
 
-    private property environment = Environment.new
+    property globals = Environment.new
+
+    def initialize
+      @environment = @globals
+
+      @globals.define("clock", Yawaraka::Clock.new)
+      @globals.define("scanln", Yawaraka::Scanln.new)
+    end
 
     # Interprets a source file.
     def interpret(statements : Array(Stmt))
@@ -25,11 +36,11 @@ module Kaze
     def interpret(statement : (Stmt | Expr)?)
       begin
         # The < is used to check if a class inherits from or is inherited from a class that inherits from the other operand
-        if statement.class < Stmt
+        if statement.is_a?(Stmt)
           return_val = execute statement.as(Stmt)
           puts return_stringify(return_val)
         else
-          return_val = evaluate statement.as(Expr)
+          return_val = evaluate statement.as(Expr) unless statement.is_a?(Nil)
           puts return_stringify(return_val)
         end
       rescue err : RuntimeError
@@ -125,6 +136,28 @@ module Kaze
       nil
     end
 
+    def visit_call_expr(expr : Expr::Call) : VG
+      callee = evaluate expr.callee
+
+      arguments = Array(VG).new
+
+      expr.arguments.each do |arg|
+        arguments << evaluate arg
+      end
+
+      unless callee.is_a?(Callable)
+        raise RuntimeError.new(expr.paren, "Can only call functions and classes.")
+      end
+
+      function = callee.as(Callable)
+
+      if arguments.size != function.arity
+        raise RuntimeError.new(expr.paren, "Expected #{function.arity} arguments but got #{arguments.size}.")
+      end
+
+      function.call(self, arguments)
+    end
+
     def visit_ternary_expr(expr : Expr::Ternary) : VG
       condition = evaluate(expr.condition)
       left = evaluate(expr.left)
@@ -137,12 +170,12 @@ module Kaze
     end
     
     def visit_variable_expr(expr : Expr::Variable) : VG
-      environment.get(expr.name)
+      @environment.get(expr.name)
     end
 
     def visit_assign_expr(expr : Expr::Assign) : VG
       value = evaluate(expr.value)
-      environment.assign(expr.name, value)
+      @environment.assign(expr.name, value)
       value
     end
 
@@ -198,27 +231,33 @@ module Kaze
       stmt.accept(self)
     end
 
-    private def execute_block(statements : Array(Stmt), environment : Environment)
-      previous = self.environment
+    def execute_block(statements : Array(Stmt), environment : Environment)
+      previous = @environment
 
       begin
-        self.environment = environment
+        @environment = environment
 
         statements.each do |statement|
           execute statement
         end
       ensure
-        self.environment = previous
+        @environment = previous
       end
     end
 
     def visit_block_stmt(stmt : Stmt::Block) : Nil
-      execute_block(stmt.statements, Environment.new(environment))
+      execute_block(stmt.statements, Environment.new(@environment))
       nil
     end
 
     def visit_expression_stmt(stmt : Stmt::Expression) : Nil
       evaluate(stmt.expression)
+      nil
+    end
+
+    def visit_function_stmt(stmt : Stmt::Function) : Nil
+      function = Function.new(stmt)
+      @environment.define(stmt.name.lexeme, function)
       nil
     end
 
@@ -245,7 +284,7 @@ module Kaze
         value = evaluate(stmt.initializer.as(Expr))
       end
 
-      environment.define(stmt.name.lexeme, value)
+      @environment.define(stmt.name.lexeme, value)
       nil
     end
 

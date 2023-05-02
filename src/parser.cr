@@ -8,6 +8,8 @@ module Kaze
     # Expression grammar:
     # expression      -> assignment ;
 
+    # arguments       -> expression ( "," expression )* ;
+
     # assignment      -> IDENTIFIER "=" assignment | ternary ;
     # ternary         -> ( logic_or "?" difference ":" difference ) | logic_or ;
     # logic_or        -> logic_and ( "or" logic_and )* ;
@@ -20,13 +22,17 @@ module Kaze
     # quotient        -> modulo ( "/" modulo )* ;
     # modulo          -> unary ( "%" unary )* ;
     # unary           -> ( "!" | "-" ) unary | primary ;
+    # call            -> primary ( "(" arguments? ")" )* ;
     # primary         -> NUMBER | STRING | IDENTIFIER | "true" | "false" | "nil" | "(" expression ")" ;
 
     # Parser grammar:
     # program         -> declaration* EOF ;
 
-    # declaration     -> var_decl | statement ;
+    # declaration     -> fun_decl | var_decl | statement ;
 
+    # fun_decl        -> "fun" function ;
+    # function        -> IDENTIFIER ( "<-" parameters )? block ;
+    # parameters      -> IDENTIFIER ( "," IDENTIFIER )* ;
     # var_decl        -> "var" IDENTIFIER ( "=" expression )? "\n" ;
 
     # statement       -> expr_stmt | for_stmt | if_stmt | println_stmt | while_stmt | block ;
@@ -87,6 +93,7 @@ module Kaze
 
     private def declaration : (Stmt | Expr)?
       begin
+        return function("function") if match?(TT::FUN)
         return var_declaration if match?(TT::VAR)
         return statement
       rescue err : ParseError
@@ -210,6 +217,32 @@ module Kaze
       return expr if @repl
       consume_newline("Expect \"\\n\" after expression.") unless no_consume_newline
       Stmt::Expression.new(expr)
+    end
+
+    private def function(kind : String) : Stmt::Function
+      name = consume(TT::IDENTIFIER, "Expect #{kind} name.")
+
+      # consume the left arrow UNLESS the next token is a begin keyword, which indicates that there are no params
+      consume(TT::LEFT_ARROW, "Expect \"<-\" after #{kind} name.") unless peek.type == TT::BEGIN
+
+      parameters = Array(Token).new
+
+      unless check?(TT::BEGIN)
+        loop do
+          if parameters.size >= 255
+            error(peek, "Can't have more than 255 parameters.")
+          end
+
+          parameters << consume(TT::IDENTIFIER, "Expect parameter name.")
+
+          break unless match?(TT::COMMA)
+        end
+      end
+
+      consume(TT::BEGIN, "Expect \"begin\" before #{kind} body.")
+      body = block
+
+      Stmt::Function.new(name, parameters, body)
     end
 
     private def block : Array(Stmt)
@@ -383,7 +416,41 @@ module Kaze
         return Expr::Unary.new(operator, right)
       end
 
-      primary
+      call
+    end
+
+    private def finish_call(callee : Expr) : Expr
+      arguments = Array(Expr).new
+
+      # don't try to parse args if right paren was found immediately
+      unless check?(TT::RIGHT_PAREN)
+        loop do
+          if arguments.size >= 255
+            error(peek, "Cannot have more than 255 arguments.")
+          end
+
+          arguments.push(expression)
+          break unless match?(TT::COMMA)
+        end
+      end
+
+      paren = consume(TT::RIGHT_PAREN, "Expect \"(\" after arguments.")
+
+      Expr::Call.new(callee, paren, arguments)
+    end
+
+    private def call : Expr
+      expr = primary
+
+      loop do
+        if match?(TT::LEFT_PAREN)
+          expr = finish_call(expr)
+        else
+          break
+        end
+      end
+
+      expr
     end
 
     private def primary : Expr
@@ -455,6 +522,10 @@ module Kaze
 
     private def peek : Token
       @tokens[current]
+    end
+
+    private def peek_next : Token
+      @tokens[current + 1]
     end
 
     private def previous : Token

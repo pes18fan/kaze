@@ -88,3 +88,41 @@ end
 `[stmt(s)]` is evaluated as long as the `[condition]` expression is truthy, with the `[initializer]` statement (which may either be a variable declaration or any expression) running once before the entire loop and the `[increment]` expression running after every iteration.
 
 Note that any or all of these clauses can be omitted, but the semicolons can't.
+
+# Functions
+
+```kaze
+fun [name] <- [params] begin
+    [stmt(s)]
+end
+```
+
+Without any parameters:
+
+```kaze
+fun [name] begin
+    [stmt(s)]
+end
+```
+
+You can call a function by `name()`.
+
+For example:
+
+```kaze
+fun hello_there begin
+    println "hello!"
+end
+
+hello_there() //=> "hello!"
+```
+
+Or with params:
+
+```kaze
+fun greet <- greeting begin
+    println greeting
+end
+
+greet("hey!") //=> "hey!"
+```

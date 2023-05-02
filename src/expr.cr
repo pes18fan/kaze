@@ -2,12 +2,13 @@ require "./token"
 
 module Kaze
   # All the types a visitor function can return.
-  alias VG = (String | Float64 | Bool)?
+  alias VG = (String | Float64 | Bool | Callable)?
 
   abstract class Expr
     module Visitor
       abstract def visit_assign_expr(expr : Assign) : VG
       abstract def visit_binary_expr(expr : Binary) : VG
+      abstract def visit_call_expr(expr : Call) : VG
       abstract def visit_grouping_expr(expr : Grouping) : VG
       abstract def visit_literal_expr(expr : Literal) : VG
       abstract def visit_logical_expr(expr : Logical) : VG
@@ -40,6 +41,19 @@ module Kaze
 
       def accept(visitor : Visitor)
         visitor.visit_binary_expr(self)
+      end
+    end
+
+    class Call < Expr
+      getter callee
+      getter paren
+      getter arguments
+
+      def initialize(@callee : Expr, @paren : Token, @arguments : Array(Expr))
+      end
+
+      def accept(visitor : Visitor)
+        visitor.visit_call_expr(self)
       end
     end
 

@@ -5,6 +5,7 @@ module Kaze
     module Visitor
       abstract def visit_block_stmt(stmt : Block) : VG
       abstract def visit_expression_stmt(stmt : Expression) : VG
+      abstract def visit_function_stmt(stmt : Function) : VG
       abstract def visit_if_stmt(stmt : If) : VG
       abstract def visit_println_stmt(stmt : Println) : VG
       abstract def visit_var_stmt(stmt : Var) : VG
@@ -32,6 +33,19 @@ module Kaze
 
       def accept(visitor : Visitor)
         visitor.visit_expression_stmt(self)
+      end
+    end
+
+    class Function < Stmt
+      getter name
+      getter params
+      getter body
+
+      def initialize(@name : Token, @params : Array(Token), @body : Array(Stmt))
+      end
+
+      def accept(visitor : Visitor)
+        visitor.visit_function_stmt(self)
       end
     end
 

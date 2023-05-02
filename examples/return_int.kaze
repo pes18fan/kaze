@@ -1,0 +1,21 @@
+fun print_int <- decimal begin
+    var j = decimal
+
+    // decrease/increase the decimal by 1 till its less than 1
+    if decimal >= 0 begin
+        for ; decimal > 1; decimal = decimal - 1 do nil
+    else
+        for ; decimal < -1; decimal = decimal + 1 do nil
+    end
+
+    // decrease/increase the initial decimal value by what it currently is to get the value rounded off
+    if decimal <= 0.5 begin
+        j = j - decimal
+    else
+        j = j + ( 1 - decimal )
+    end
+
+    println j
+end
+
+print_int(69.420)

@@ -8,17 +8,19 @@ output_dir = ARGV[0]
 define_ast(output_dir, "expr", [
   "Assign    $     name : Token, value : Expr",
   "Binary    $     left : Expr, operator : Token, right : Expr",
+  "Call      $     callee : Expr, paren : Token, arguments : Array(Expr)",
   "Grouping  $     expression : Expr",
   "Literal   $     value : VG",
   "Logical   $     left : Expr, operator : Token, right : Expr",
   "Unary     $     operator : Token, right : Expr",
   "Ternary   $     condition : Expr, left : Expr, right : Expr",
   "Variable  $     name : Token"
-], "(String | Float64 | Bool)?")
+], "(String | Float64 | Bool | Callable)?")
 
 define_ast(output_dir, "stmt", [
   "Block        $   statements : Array(Stmt)",
   "Expression   $   expression : Expr",
+  "Function     $   name : Token, params : Array(Token), body : Array(Stmt)",
   "If           $   condition : Expr, then_branch : Stmt, else_branch : Stmt?",
   "Println      $   expression : Expr",
   "Var          $   name : Token, initializer : Expr?",

@@ -53,6 +53,10 @@ module Kaze
       parenthesize(expr.operator.lexeme, expr.left.name, expr.right.name)
     end
 
+    def visit_call_expr(expr : Expr::Call) : String
+      # nothing
+    end
+
     # Encapsulates an expression in parentheses as a part of the final S-expression.
     private def parenthesize(name : String, *exprs : Expr)
       String.build do |str|

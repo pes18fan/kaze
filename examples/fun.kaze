@@ -1,0 +1,5 @@
+fun say_hi <- first, last begin
+    println "hi " + first + " " + last + "!"
+end
+
+say_hi("mister", "epic gamer")
