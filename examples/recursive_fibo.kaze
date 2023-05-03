@@ -1,0 +1,14 @@
+fun fib <- n begin
+    if n <= 1 then return n
+    return fib(n - 2) + fib(n - 1)
+end
+
+var a = clock()
+
+for var i = 0; i < 25; i = i + 1 begin
+    println fib(i)
+end
+
+var b = clock()
+
+println b - a // around 6 seconds in the optimized interpreter

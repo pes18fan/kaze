@@ -23,6 +23,7 @@ define_ast(output_dir, "stmt", [
   "Function     $   name : Token, params : Array(Token), body : Array(Stmt)",
   "If           $   condition : Expr, then_branch : Stmt, else_branch : Stmt?",
   "Println      $   expression : Expr",
+  "Return       $   keyword : Token, value : Expr?",
   "Var          $   name : Token, initializer : Expr?",
   "While        $   condition : Expr, body : Stmt"
 ])

@@ -35,12 +35,13 @@ module Kaze
     # parameters      -> IDENTIFIER ( "," IDENTIFIER )* ;
     # var_decl        -> "var" IDENTIFIER ( "=" expression )? "\n" ;
 
-    # statement       -> expr_stmt | for_stmt | if_stmt | println_stmt | while_stmt | block ;
+    # statement       -> expr_stmt | for_stmt | if_stmt | println_stmt | return_stmt | while_stmt | block ;
 
     # if_stmt         -> "if" expression "then" statement ( "else" statement )? ;
     # expr_stmt       -> expression "\n" ;
     # for_stmt        -> "for" ( var_decl | expr_stmt )? ";" expression? ";" expression ( "do" statement | block ) ;
     # println_stmt    -> "println" expression "\n" ;
+    # return_stmt     -> "return" expression? "\n" ;
     # while_stmt      -> "while" expression ( "do" statement | block ) ;
     # block           -> "begin" declaration* "end"
 
@@ -106,6 +107,7 @@ module Kaze
       return for_statement if match?(TT::FOR)
       return if_statement if match?(TT::IF)
       return println_statement if match?(TT::PRINTLN)
+      return return_statement if match?(TT::RETURN)
       return while_statement if match?(TT::WHILE)
       return Stmt::Block.new(block) if match?(TT::BEGIN)
       expression_statement
@@ -142,7 +144,7 @@ module Kaze
         body = Stmt::Block.new(
           [
             body,
-            Stmt::Expression.new(increment.as(Expr))
+            Stmt::Expression.new(increment.as(Expr)),
           ]
         )
       end
@@ -156,7 +158,7 @@ module Kaze
         body = Stmt::Block.new(
           [
             as_stmt(initializer, "Expect initializer to be statement."),
-            body
+            body,
           ]
         )
       end
@@ -188,6 +190,18 @@ module Kaze
       expr = expression
       consume_newline("Expect \"\\n\" after expression.")
       Stmt::Println.new(expr)
+    end
+
+    private def return_statement : Stmt
+      keyword = previous
+      value = nil
+
+      unless check?(TT::NEWLINE)
+        value = expression
+      end
+
+      consume_newline("Expect newline.")
+      Stmt::Return.new(keyword, value)
     end
 
     private def var_declaration(no_consume_newline : Bool = false) : Stmt
@@ -254,7 +268,7 @@ module Kaze
         if implicit_end_block_needed?
           return statements
         end
-        
+
         statements.push(as_stmt(declaration, "Expect statement."))
       end
 
@@ -485,7 +499,7 @@ module Kaze
     end
 
     private def implicit_end_block_needed? : Bool
-      !!(@implicit_end_block_at.find { |i| i == peek.type } )
+      !!(@implicit_end_block_at.find { |i| i == peek.type })
     end
 
     private def consume(type : TT, message : String) : Token

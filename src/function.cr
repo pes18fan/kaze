@@ -1,6 +1,8 @@
+require "./return"
+
 module Kaze
   class Function < Callable
-    def initialize(@declaration : Stmt::Function)
+    def initialize(@declaration : Stmt::Function, @closure : Environment)
     end
 
     def arity : Int32
@@ -8,7 +10,7 @@ module Kaze
     end
 
     def call(interpreter : Interpreter, arguments : Array(VG)) : VG
-      environment = Environment.new(interpreter.globals)
+      environment = Environment.new(@closure)
 
       i = 0
       @declaration.params.each do |param|
@@ -16,7 +18,11 @@ module Kaze
         i += 1
       end
 
-      interpreter.execute_block(@declaration.body, environment)
+      begin
+        interpreter.execute_block(@declaration.body, environment)
+      rescue return_value : Return
+        return return_value.value
+      end
       nil
     end
 

@@ -120,7 +120,7 @@ module Kaze
             advance
           end
 
-          advance
+          advance unless at_end?
         else
           add_token(TT::SLASH)
         end

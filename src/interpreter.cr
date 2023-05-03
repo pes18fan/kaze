@@ -256,7 +256,7 @@ module Kaze
     end
 
     def visit_function_stmt(stmt : Stmt::Function) : Nil
-      function = Function.new(stmt)
+      function = Function.new(stmt, @environment)
       @environment.define(stmt.name.lexeme, function)
       nil
     end
@@ -275,6 +275,14 @@ module Kaze
       value = evaluate(stmt.expression)
       puts stringify(value)
       nil
+    end
+
+    def visit_return_stmt(stmt : Stmt::Return) : Nil
+      value = nil
+      value = evaluate stmt.value.as(Expr) if stmt.value != nil
+
+      # raise an exception to get the return value back to the top of the stack
+      raise Return.new(value)
     end
 
     def visit_var_stmt(stmt : Stmt::Var) : Nil

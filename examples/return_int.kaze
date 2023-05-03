@@ -1,4 +1,4 @@
-fun print_int <- decimal begin
+fun get_int <- decimal begin
     var j = decimal
 
     // decrease/increase the decimal by 1 till its less than 1
@@ -15,7 +15,7 @@ fun print_int <- decimal begin
         j = j + ( 1 - decimal )
     end
 
-    println j
+    return j
 end
 
-print_int(69.420)
+println get_int(69.420)

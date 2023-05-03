@@ -8,6 +8,7 @@ module Kaze
       abstract def visit_function_stmt(stmt : Function) : VG
       abstract def visit_if_stmt(stmt : If) : VG
       abstract def visit_println_stmt(stmt : Println) : VG
+      abstract def visit_return_stmt(stmt : Return) : VG
       abstract def visit_var_stmt(stmt : Var) : VG
       abstract def visit_while_stmt(stmt : While) : VG
     end
@@ -70,6 +71,18 @@ module Kaze
 
       def accept(visitor : Visitor)
         visitor.visit_println_stmt(self)
+      end
+    end
+
+    class Return < Stmt
+      getter keyword
+      getter value
+
+      def initialize(@keyword : Token, @value : Expr?)
+      end
+
+      def accept(visitor : Visitor)
+        visitor.visit_return_stmt(self)
       end
     end
 
