@@ -42,7 +42,7 @@ module Kaze
       getter params
       getter body
 
-      def initialize(@name : Token, @params : Array(Token), @body : Array(Stmt))
+      def initialize(@name : Token?, @params : Array(Token), @body : Array(Stmt))
       end
 
       def accept(visitor : Visitor)

@@ -10,6 +10,7 @@ module Kaze
       abstract def visit_binary_expr(expr : Binary) : VG
       abstract def visit_call_expr(expr : Call) : VG
       abstract def visit_grouping_expr(expr : Grouping) : VG
+      abstract def visit_lambda_expr(expr : Lambda) : VG
       abstract def visit_literal_expr(expr : Literal) : VG
       abstract def visit_logical_expr(expr : Logical) : VG
       abstract def visit_unary_expr(expr : Unary) : VG
@@ -65,6 +66,18 @@ module Kaze
 
       def accept(visitor : Visitor)
         visitor.visit_grouping_expr(self)
+      end
+    end
+
+    class Lambda < Expr
+      getter params
+      getter body
+
+      def initialize(@params : Array(Token), @body : Stmt)
+      end
+
+      def accept(visitor : Visitor)
+        visitor.visit_lambda_expr(self)
       end
     end
 

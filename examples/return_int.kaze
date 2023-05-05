@@ -1,4 +1,5 @@
-fun get_int <- decimal begin
+// a floor function to turn a float to a floored decimal (except it may also ceil positive numbers)
+fun floor <- decimal begin
     var j = decimal
 
     // decrease/increase the decimal by 1 till its less than 1
@@ -18,4 +19,7 @@ fun get_int <- decimal begin
     return j
 end
 
-println get_int(69.420)
+println floor(69.520) //=> 70
+println floor(69.420) //=> 69
+println floor(-69.420) //=> 69
+println floor(-69.520) //=> 69 (what???)

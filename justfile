@@ -26,7 +26,6 @@ release:
     @mv bin/{{ exec_name }} bin/release
     @echo "Compiled successfully."
 
-
 # Generate the abstract syntax trees.
 ast:
     @echo "Generating ASTs..."

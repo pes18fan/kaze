@@ -37,6 +37,7 @@ module Kaze
       "for"     => TT::FOR,
       "fun"     => TT::FUN,
       "if"      => TT::IF,
+      "lambda"  => TT::LAMBDA,
       "nil"     => TT::NIL,
       "or"      => TT::OR,
       "println" => TT::PRINTLN,
@@ -63,7 +64,7 @@ module Kaze
       end
 
       Program.loc = @line
-      
+
       tokens.push(Token.new(TT::EOF, "", nil, @line))
       tokens
     end
@@ -120,7 +121,7 @@ module Kaze
             advance
           end
 
-          advance unless at_end?
+          next_line unless at_end?
         else
           add_token(TT::SLASH)
         end

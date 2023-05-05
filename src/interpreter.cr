@@ -25,7 +25,7 @@ module Kaze
     def interpret(statements : Array(Stmt))
       begin
         statements.each do |statement|
-            execute statement
+          execute statement
         end
       rescue err : RuntimeError
         Program.runtime_error(err)
@@ -91,7 +91,7 @@ module Kaze
         return !equal?(left, right)
       when TT::EQUAL_EQUAL
         return equal?(left, right)
-      # Comparison operators.
+        # Comparison operators.
       when TT::GREATER
         check_number_operand(expr.operator, left, right)
         return left.as(Float64) > right.as(Float64)
@@ -104,7 +104,7 @@ module Kaze
       when TT::LESS_EQUAL
         check_number_operand(expr.operator, left, right)
         return left.as(Float64) <= right.as(Float64)
-      # Arithmetic operators.
+        # Arithmetic operators.
       when TT::MINUS
         check_number_operand(expr.operator, left, right)
         return left.as(Float64) - right.as(Float64)
@@ -161,16 +161,22 @@ module Kaze
     def visit_ternary_expr(expr : Expr::Ternary) : VG
       condition = evaluate(expr.condition)
       left = evaluate(expr.left)
-      right = evaluate(expr.right)
 
       return left if truthy?(condition)
+
+      right = evaluate(expr.right)
+
       return right
 
       nil
     end
-    
+
     def visit_variable_expr(expr : Expr::Variable) : VG
       @environment.get(expr.name)
+    end
+
+    def visit_lambda_expr(expr : Expr::Lambda) : VG
+      Function.new(Stmt::Function.new(nil, expr.params, [expr.body]), @environment)
     end
 
     def visit_assign_expr(expr : Expr::Assign) : VG
@@ -205,7 +211,7 @@ module Kaze
 
     private def stringify(object : VG)
       return "nil" if object == nil
-      
+
       if object.class == Float64
         text = object.to_s
 
@@ -257,7 +263,7 @@ module Kaze
 
     def visit_function_stmt(stmt : Stmt::Function) : Nil
       function = Function.new(stmt, @environment)
-      @environment.define(stmt.name.lexeme, function)
+      @environment.define(stmt.name.as(Token).lexeme, function)
       nil
     end
 

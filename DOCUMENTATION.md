@@ -126,3 +126,13 @@ end
 
 greet("hey!") //=> "hey!"
 ```
+
+## lambda
+
+Anonymous lambda functions can be created with the `lambda` keyword. They work similarlty like in Python, as in the fact that their body must only be one expression, which is what they return. Lambdas may take zero or more arguments.
+
+```kaze
+var a = lambda x: x * 2
+
+a(2) //=> 4
+```

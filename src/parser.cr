@@ -6,10 +6,11 @@ module Kaze
   # The language parser.
   class Parser
     # Expression grammar:
-    # expression      -> assignment ;
+    # expression      -> lambda ;
 
     # arguments       -> expression ( "," expression )* ;
 
+    # lambda          -> "lambda" parameters ":" assignment ;
     # assignment      -> IDENTIFIER "=" assignment | ternary ;
     # ternary         -> ( logic_or "?" difference ":" difference ) | logic_or ;
     # logic_or        -> logic_and ( "or" logic_and )* ;
@@ -282,13 +283,13 @@ module Kaze
     end
 
     private def assignment : Expr
-      expr = ternary
+      expr = lambda
 
       if match?(TT::EQUAL)
         equals = previous
         value = assignment
 
-        if expr.class == Expr::Variable
+        if expr.is_a?(Expr::Variable)
           name = expr.as(Expr::Variable).name
           return Expr::Assign.new(name, value)
         end
@@ -297,6 +298,31 @@ module Kaze
       end
 
       expr
+    end
+
+    private def lambda : Expr
+      if match?(TT::LAMBDA)
+        parameters = Array(Token).new
+
+        unless check?(TT::COLON)
+          loop do
+            if parameters.size >= 255
+              error(peek, "Can't have more than 255 parameters.")
+            end
+
+            parameters << consume(TT::IDENTIFIER, "Expect parameter name.")
+
+            break unless match?(TT::COMMA)
+          end
+        end
+
+        consume(TT::COLON, "Expect \":\" after parameters.")
+        body = Stmt::Return.new(previous, expression)
+
+        return Expr::Lambda.new(parameters, body)
+      end
+
+      ternary
     end
 
     private def ternary : Expr

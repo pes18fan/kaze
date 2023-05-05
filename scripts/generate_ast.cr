@@ -10,6 +10,7 @@ define_ast(output_dir, "expr", [
   "Binary    $     left : Expr, operator : Token, right : Expr",
   "Call      $     callee : Expr, paren : Token, arguments : Array(Expr)",
   "Grouping  $     expression : Expr",
+  "Lambda    $     params : Array(Token), body : Stmt",
   "Literal   $     value : VG",
   "Logical   $     left : Expr, operator : Token, right : Expr",
   "Unary     $     operator : Token, right : Expr",
@@ -20,7 +21,7 @@ define_ast(output_dir, "expr", [
 define_ast(output_dir, "stmt", [
   "Block        $   statements : Array(Stmt)",
   "Expression   $   expression : Expr",
-  "Function     $   name : Token, params : Array(Token), body : Array(Stmt)",
+  "Function     $   name : Token?, params : Array(Token), body : Array(Stmt)",
   "If           $   condition : Expr, then_branch : Stmt, else_branch : Stmt?",
   "Println      $   expression : Expr",
   "Return       $   keyword : Token, value : Expr?",

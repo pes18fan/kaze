@@ -27,7 +27,7 @@ module Kaze
     end
 
     def to_s : String
-      "<fun #{@declaration.name.lexeme}>"
+      @declaration.name.nil? ? "<lambda fun>" : "<fun #{@declaration.name.as(Token).lexeme}>"
     end
   end
 end

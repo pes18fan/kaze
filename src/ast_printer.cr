@@ -57,6 +57,10 @@ module Kaze
       # nothing
     end
 
+    def visit_lambda_expr(expr : Expr::Lambda) : String
+      # nothing
+    end
+
     # Encapsulates an expression in parentheses as a part of the final S-expression.
     private def parenthesize(name : String, *exprs : Expr)
       String.build do |str|
