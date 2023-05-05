@@ -236,9 +236,9 @@ module Kaze
       return source[@current + 1]
     end
 
-    # Returns true if `c` is a letter or an underscore.
+    # Returns true if `c` is a letter, an underscore, or a question or exclamation mark.
     private def alpha?(c : Char) : Bool
-      return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'
+      return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '?' || c == '!'
     end
 
     # Returns true if `c` is alphanumeric.
