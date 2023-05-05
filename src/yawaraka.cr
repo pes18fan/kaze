@@ -1,41 +1,41 @@
+require "./util"
+
 module Kaze
+  # The standard library.
   module Yawaraka
-    # Returns the number of milliseconds passed since January 1st 1970.
-    class Clock < Callable
-      def initialize
-      end
+    extend self
 
-      def arity : Int32
-        0
-      end
+    # Macro to create a native function in the library.
+    macro create_native_fun(class_name, arity, body)
+      class {{ class_name }} < Callable
+        def initialize
+        end
 
-      def call(interpreter : Interpreter, arguments : Array(VG)) : VG
-        Time.utc.to_unix_ms / 1000
-      end
+        def arity : Int32
+          {{ arity }}
+        end
 
-      def to_s : String
-        "<native fun>"
+        def call(interpreter : Interpreter, arguments : Array(VG)) : VG
+          {{ body }}
+        end
+
+        def to_s : String
+          "<native fun>"
+        end
       end
     end
 
-    # Returns input from STDIN.
-    # Takes an argument as the input prompt.
-    class Scanln < Callable
-      def initialize
-      end
+    # Creates the standard library functions.
 
-      def arity : Int32
-        1
-      end
+    # clock(): Return the number of seconds passed since January 1st, 1970.
+    Yawaraka.create_native_fun(Clock, 0, Time.utc.to_unix_ms / 1000)
 
-      def call(interpreter : Interpreter, arguments : Array(VG)) : VG
-        print arguments[0]
+    # scanln(): Returns input from stdin, with the argument being the prompt.
+    Yawaraka.create_native_fun(Scanln, 1,
+      begin
+        print Util.remove_escape_seqs(arguments[0].to_s)
         gets
       end
-
-      def to_s : String
-        "<native fun>"
-      end
-    end
+    )
   end
 end
