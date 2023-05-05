@@ -77,6 +77,7 @@ module Kaze
     def initialize(@tokens : Array(Token), @repl : Bool)
     end
 
+    # Parse an array of tokens.
     def parse : Array(Stmt) | (Stmt | Expr)?
       statements = Array(Stmt).new
 
@@ -97,11 +98,12 @@ module Kaze
       statements
     end
 
-    # Returns the parsed expression.
+    # Parse an expression.
     private def expression : Expr
       assignment
     end
 
+    # Parse a declaration.
     private def declaration : (Stmt | Expr)?
       begin
         return function("function") if match?(TT::FUN)
@@ -113,6 +115,7 @@ module Kaze
       end
     end
 
+    # Parse a statement.
     private def statement : Stmt | Expr
       return for_statement if match?(TT::FOR)
       return if_statement if match?(TT::IF)
@@ -123,7 +126,7 @@ module Kaze
       expression_statement
     end
 
-    # Parses a for loop by desugaring it into a while loop.
+    # Parse a for loop by desugaring it into a while loop.
     private def for_statement : Stmt
       initializer = uninitialized (Stmt | Expr)?
 
@@ -176,6 +179,7 @@ module Kaze
       body
     end
 
+    # Parse an if statement. Note that else-if constructs are not available yet.
     private def if_statement : Stmt
       condition = expression
       in_block = check?(TT::BEGIN)
@@ -196,17 +200,20 @@ module Kaze
       Stmt::If.new(condition, then_branch, else_branch)
     end
 
+    # Parse a println statement.
     private def println_statement : Stmt
       expr = expression
       Stmt::Println.new(expr)
     end
 
+    # Parse a return statement.
     private def return_statement : Stmt
       keyword = previous
       value = expression
       Stmt::Return.new(keyword, value)
     end
 
+    # Parse a variable declaration. The initial value may be nil.
     private def var_declaration : Stmt
       name = consume(TT::IDENTIFIER, "Expect variable name.")
 
@@ -218,6 +225,7 @@ module Kaze
       return Stmt::Var.new(name, initializer)
     end
 
+    # Parse a while loop.
     private def while_statement : Stmt
       condition = expression
 
@@ -228,6 +236,8 @@ module Kaze
       Stmt::While.new(condition, body)
     end
 
+    # Parse an expression as a statement, but only if its a function call or an assignment.
+    # Returns an expression if in a REPL session.
     private def expression_statement : Expr | Stmt
       expr = expression
       return expr if @repl
@@ -239,10 +249,12 @@ module Kaze
       raise error(peek, "Unexpected expression.")
     end
 
+    # Parse a function definition.
     private def function(kind : String) : Stmt::Function
       name = consume(TT::IDENTIFIER, "Expect #{kind} name.")
 
-      # consume the left arrow UNLESS the next token is a begin keyword, which indicates that there are no params
+      # consume the left arrow UNLESS the next token is a begin keyword
+      # the begin keyword being there indicates that there are no params
       consume(TT::LEFT_ARROW, "Expect \"<-\" after #{kind} name.") unless peek.type == TT::BEGIN
 
       parameters = Array(Token).new
@@ -265,6 +277,7 @@ module Kaze
       Stmt::Function.new(name, parameters, body)
     end
 
+    # Parse a block, beginning with `begin` and terminating with `end`.
     private def block : Array(Stmt)
       statements = Array(Stmt).new
 
@@ -287,6 +300,7 @@ module Kaze
       statements
     end
 
+    # Parse an assignment expression.
     private def assignment : Expr
       expr = lambda
 
@@ -305,6 +319,7 @@ module Kaze
       expr
     end
 
+    # Parse an anonymous lambda function expression.
     private def lambda : Expr
       if match?(TT::LAMBDA)
         parameters = Array(Token).new
@@ -330,6 +345,7 @@ module Kaze
       ternary
     end
 
+    # Parse a ternary operation i.e. the conditional operator.
     private def ternary : Expr
       expr = or
 
@@ -344,6 +360,7 @@ module Kaze
       expr
     end
 
+    # Parse a logical OR expression.
     private def or : Expr
       expr = and
 
@@ -356,6 +373,7 @@ module Kaze
       expr
     end
 
+    # Parse a logical AND expression.
     private def and : Expr
       expr = equality
 
@@ -368,6 +386,7 @@ module Kaze
       expr
     end
 
+    # Parse an equality expression.
     private def equality : Expr
       expr = comparison
 
@@ -380,6 +399,7 @@ module Kaze
       expr
     end
 
+    # Parse a comparison expression.
     private def comparison : Expr
       expr = difference
 
@@ -392,6 +412,7 @@ module Kaze
       expr
     end
 
+    # Parse a binary expression of subtraction.
     private def difference : Expr
       expr = sum
 
@@ -404,6 +425,7 @@ module Kaze
       expr
     end
 
+    # Parse a binary expression of addition.
     private def sum : Expr
       expr = product
 
@@ -416,6 +438,7 @@ module Kaze
       expr
     end
 
+    # Parse a binary expression of multiplication.
     private def product : Expr
       expr = quotient
 
@@ -428,6 +451,7 @@ module Kaze
       expr
     end
 
+    # Parse a binary expression of division.
     private def quotient : Expr
       expr = modulo
 
@@ -441,6 +465,7 @@ module Kaze
       expr
     end
 
+    # Parse a binary expression of modulo i.e. remainder.
     private def modulo : Expr
       expr = unary
 
@@ -454,6 +479,7 @@ module Kaze
       expr
     end
 
+    # Parse a unary expression.
     private def unary : Expr
       if match?(TT::BANG, TT::MINUS)
         operator = previous
@@ -464,6 +490,9 @@ module Kaze
       call
     end
 
+    # Finish parsing a function call.
+    # This parses the arguments in a function call.
+    # It spits out an error if there are 255 or more args.
     private def finish_call(callee : Expr) : Expr
       arguments = Array(Expr).new
 
@@ -484,6 +513,7 @@ module Kaze
       Expr::Call.new(callee, paren, arguments)
     end
 
+    # Initialize parsing a function call.
     private def call : Expr
       expr = primary
 
@@ -498,6 +528,10 @@ module Kaze
       expr
     end
 
+    # Parse a primary i.e. literal expression.
+    # These include the following expressions:
+    # `true`, `false`, `nil`, any number or string literal, identifiers i.e. variable names, or grouping expressions i.e. parentheses.
+    # An exception is raised if none of those are found.
     private def primary : Expr
       # Return false, true or nil.
       return Expr::Literal.new(false) if match?(TT::FALSE)
@@ -518,6 +552,7 @@ module Kaze
       raise error(peek, "Expect expression.")
     end
 
+    # Check if any of any of `*types` match the next token's type.
     private def match?(*types : TT) : Bool
       types.each do |type|
         if check?(type)
@@ -529,16 +564,21 @@ module Kaze
       return false
     end
 
+    # Check if a block needs to be implicitly ended at the next token.
     private def implicit_end_block_needed? : Bool
       !!(@implicit_end_block_at.find { |i| i == peek.type })
     end
 
+    # Consume the next token if its type matches `type`.
+    # Raises an exception with the provided message if the next token is not the specified one.
     private def consume(type : TT, message : String) : Token
       return advance if check?(type)
 
       raise error(peek, message)
     end
 
+    # Cast a union type of (Stmt | Expr)? to a Stmt.
+    # Raises an exception if it fails to do so due to a TypeCastError.
     private def as_stmt(stmt : (Stmt | Expr)?, message : String)
       begin
         return stmt.as(Stmt)
@@ -547,37 +587,45 @@ module Kaze
       end
     end
 
+    # Checks if the next token's type is `type`.
     private def check?(type : TT) : Bool
       return false if at_end?
       return peek.type == type
     end
 
+    # Moves ahead in the token list.
     private def advance : Token
       @current += 1 unless at_end?
       previous
     end
 
+    # Checks if the parser has reached the end of the token list.
     private def at_end? : Bool
       peek.type == TT::EOF
     end
 
+    # Returns the next token, i.e. the token about to be parsed.
     private def peek : Token
       @tokens[current]
     end
 
+    # Returns the token after the token about to be parsed.
     private def peek_next : Token
       @tokens[current + 1]
     end
 
+    # Returns the token that was just parsed.
     private def previous : Token
       @tokens[current - 1]
     end
 
+    # Prints an error message and returns a new ParseError.
     private def error(token : Token, message : String) : ParseError
       Program.error(token, message)
       ParseError.new
     end
 
+    # Discards tokens until reaching EOF or until it finds one of particular keywords.
     private def synchronize
       advance
 

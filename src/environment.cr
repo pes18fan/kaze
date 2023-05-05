@@ -4,7 +4,10 @@ require "./runtime_error"
 module Kaze
   # Environment where variable bindings are to be stored.
   class Environment
+    # The environment enclosing a new instance.
     property enclosing
+
+    # The values in the environment.
     private property values = Hash(String, VG).new
 
     def initialize
@@ -14,6 +17,9 @@ module Kaze
     def initialize(@enclosing : Environment)
     end
 
+    # Returns the value of the variable matching `name`'s lexeme.
+    # If an enclosing environment exists, it fetches the variable from there.
+    # Raises an exception if the requested variable has a value of nil, or if it doesn't exist.
     def get(name : Token) : VG
       if values.has_key?(name.lexeme)
         return values[name.lexeme] unless values[name.lexeme] == nil
@@ -28,6 +34,9 @@ module Kaze
       raise RuntimeError.new(name, "Undefined variable \"#{name.lexeme}\".")
     end
 
+    # Assigns a value to an existing variable.
+    # If the enclosing environment exists, it assigns the variable present there.
+    # Raises an exception if the requested variable doesn't exist.
     def assign(name : Token, value : VG)
       if values.has_key?(name.lexeme)
         values[name.lexeme] = value
@@ -42,13 +51,10 @@ module Kaze
       raise RuntimeError.new(name, "Undefined variable \"#{name.lexeme}\".")
     end
 
+    # Defines a new variable binding.
+    # If the variable name is `_`, no definition is done.
     def define(name : String, value : VG)
-      # Don't define if the variable is named "_"
-      if name == "_"
-        return
-      end
-
-      values[name] = value
+      values[name] = value unless name == "_"
     end
   end
 end

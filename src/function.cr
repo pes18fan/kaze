@@ -1,6 +1,7 @@
 require "./return"
 
 module Kaze
+  # A callable function. It may also be anonymous.
   class Function < Callable
     def initialize(@declaration : Stmt::Function, @closure : Environment)
     end
