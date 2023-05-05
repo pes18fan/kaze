@@ -139,13 +139,13 @@ module Kaze
       end
       consume(TT::DO, "Expect \"do\" or \"begin\" after for clauses.") unless check?(TT::BEGIN)
 
-      body = as_stmt(statement, "Expect statement.")
+      body = as_stmt(declaration, "Expect statement.")
 
       if increment != nil
         body = Stmt::Block.new(
           [
             body,
-            Stmt::Var.new(Token.new(TT::IDENTIFIER, "_", nil, peek.line), increment.as(Expr)),
+            Stmt::Var.new(Token.new(TT::IDENTIFIER, "_", nil, peek.line, 0), increment.as(Expr)),
           ]
         )
       end
@@ -214,7 +214,7 @@ module Kaze
 
       consume(TT::DO, "Expect \"do\" or \"begin\" after condition.") unless check?(TT::BEGIN)
 
-      body = as_stmt(statement, "Expect statement.")
+      body = as_stmt(declaration, "Expect statement.")
 
       Stmt::While.new(condition, body)
     end

@@ -15,11 +15,10 @@ module Kaze
     # The line where the token is.
     property line : Int32
 
-    def initialize(type : TT, lexeme : String, literal : (String | Float64)?, line : Int32)
-      @type = type
-      @lexeme = lexeme
-      @literal = literal
-      @line = line
+    # The column in the line where the token is.
+    property column : Int32
+
+    def initialize(@type : TT, @lexeme : String, @literal : (String | Float64)?, @line : Int32, @column : Int32)
     end
 
     # Converts the token to a string.

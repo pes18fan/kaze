@@ -20,7 +20,7 @@ module Kaze
     private property line = 1
 
     # The position of the scanner in a line.
-    private property line_current = 0
+    private property column = 0
 
     # All of the reserved keywords.
     @@KEYWORDS : Hash(String, TT) = {
@@ -62,7 +62,7 @@ module Kaze
 
       Program.loc = @line
 
-      tokens.push(Token.new(TT::EOF, "", nil, @line))
+      tokens.push(Token.new(TT::EOF, "", nil, @line, @column))
       tokens
     end
 
@@ -99,7 +99,7 @@ module Kaze
           end
 
           if at_end?
-            Kaze::Program.error(@line, "Unterminated multiline comment.")
+            Kaze::Program.error(@line, "Unterminated multiline comment.", @column)
             return
           end
 
@@ -107,7 +107,7 @@ module Kaze
             advance
 
             if at_end?
-              Kaze::Program.error(@line, "Unterminated multiline comment.")
+              Kaze::Program.error(@line, "Unterminated multiline comment.", @column)
               return
             end
           end
@@ -150,7 +150,7 @@ module Kaze
         elsif alpha?(c)
           identifier
         else
-          Program.error(@line, "Unexpected character.")
+          Program.error(@line, "Unexpected character.", @column)
           return
         end
       end
@@ -203,7 +203,7 @@ module Kaze
       end
 
       if at_end?
-        Kaze::Program.error(@line, "Unterminated string.") if at_end?
+        Kaze::Program.error(@line, "Unterminated string.", @column) if at_end?
         return
       end
 
@@ -260,13 +260,13 @@ module Kaze
     private def advance : Char
       old_curr = @current
       @current += 1
-      @line_current += 1
+      @column += 1
       return source[old_curr]
     end
 
     # Go to the next line.
     private def next_line
-      @line_current = 0
+      @column = 0
       @line += 1
     end
 
@@ -278,7 +278,7 @@ module Kaze
     # Adds a token with a literal.
     private def add_token(type : TT, literal : (String | Float64)?)
       text = source[@start...@current]
-      tokens.push(Token.new(type, text, literal, @line))
+      tokens.push(Token.new(type, text, literal, @line, @column))
     end
   end
 end

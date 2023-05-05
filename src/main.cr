@@ -70,15 +70,15 @@ module Kaze
     # Reports an error with a token.
     def self.error(token : Token, message : String)
       if token.type == TT::EOF
-        report(token.line, "at end", message)
+        report(token.line, "at end", message, token.column)
       else
-        report(token.line, "at \"" + token.lexeme + "\"", message)
+        report(token.line, "at \"" + token.lexeme + "\"", message, token.column)
       end
     end
 
     # Reports an error in a particular line.
-    def self.error(line : Int32, message : String)
-      report(line, "", message)
+    def self.error(line : Int32, message : String, column : Int32? = nil)
+      report(line, "", message, column)
     end
 
     def self.runtime_error(error : RuntimeError)
@@ -87,8 +87,8 @@ module Kaze
     end
 
     # Prints an error message.
-    private def self.report(line : Int32, where : String, message : String)
-      STDERR.puts "[line #{line}] Error#{where.empty? ? "" : " #{where}"}: #{message}"
+    private def self.report(line : Int32, where : String, message : String, column : Int32? = nil)
+      STDERR.puts "[line #{line}#{column.nil? ? "" : " : #{column}"}] Error#{where.empty? ? "" : " #{where}"}: #{message}"
       @@had_error = true
     end
 
