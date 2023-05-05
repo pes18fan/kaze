@@ -18,7 +18,6 @@ module Kaze
     STAR
 
     # One or two character tokens.
-    BANG
     BANG_EQUAL
     EQUAL
     EQUAL_EQUAL
@@ -46,6 +45,7 @@ module Kaze
     IF
     LAMBDA
     NIL
+    NOT
     OR
     PRINTLN
     RETURN

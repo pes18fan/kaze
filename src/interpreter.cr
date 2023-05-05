@@ -81,7 +81,7 @@ module Kaze
       right = evaluate(expr.right)
 
       case expr.operator.type
-      when TT::BANG
+      when TT::NOT
         return !truthy?(right)
       when TT::MINUS
         check_number_operand(expr.operator, right)
@@ -97,7 +97,7 @@ module Kaze
       right = evaluate(expr.right)
 
       case expr.operator.type
-        # Equality operators.
+      # Equality operators.
       when TT::BANG_EQUAL
         return !equal?(left, right)
       when TT::EQUAL_EQUAL
@@ -120,15 +120,11 @@ module Kaze
         check_number_operand(expr.operator, left, right)
         return left.as(Float64) - right.as(Float64)
       when TT::PLUS
-        if left.class == Float64 && right.class == Float64
+        if left.is_a?(Float64) && right.is_a?(Float64)
           return left.as(Float64) + right.as(Float64)
         end
 
-        if left.class == String && right.class == String
-          return left.to_s + right.to_s
-        end
-
-        raise RuntimeError.new(expr.operator, "Operators must be two numbers or two strings.")
+        return stringify(left) + stringify(right)
       when TT::SLASH
         check_number_operand(expr.operator, left, right)
         return left.as(Float64) / right.as(Float64) if right.as(Float64) != 0
@@ -236,7 +232,7 @@ module Kaze
       return "nil" if object == nil
       text = object.to_s
 
-      if object.class == Float64
+      if object.is_a?(Float64)
         if text.ends_with?(".0")
           text = text[0...(text.size - 2)]
         end

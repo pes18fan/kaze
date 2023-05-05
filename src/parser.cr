@@ -481,7 +481,7 @@ module Kaze
 
     # Parse a unary expression.
     private def unary : Expr
-      if match?(TT::BANG, TT::MINUS)
+      if match?(TT::NOT, TT::MINUS)
         operator = previous
         right = unary
         return Expr::Unary.new(operator, right)

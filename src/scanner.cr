@@ -36,6 +36,7 @@ module Kaze
       "if"      => TT::IF,
       "lambda"  => TT::LAMBDA,
       "nil"     => TT::NIL,
+      "not"     => TT::NOT,
       "or"      => TT::OR,
       "println" => TT::PRINTLN,
       "return"  => TT::RETURN,
@@ -125,7 +126,12 @@ module Kaze
       when '%'
         add_token(TT::PERCENT)
       when '!'
-        add_token(match?('=') ? TT::BANG_EQUAL : TT::BANG)
+        if match?('=')
+          add_token(TT::BANG_EQUAL)
+        else
+          Program.error(@line, "Unexpected character.", @column)
+          return
+        end
       when '='
         add_token(match?('=') ? TT::EQUAL_EQUAL : TT::EQUAL)
       when '<'
