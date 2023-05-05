@@ -1,15 +1,15 @@
 var a = "hello!"
-println a
+println a //=> "hello!"
 
 begin
     var b = "hey!"
-    println b
+    println b //=> "hey!"
 
     begin
         var c = "helo!"
-        println c
+        println c //=> "helo!"
     end
-    println c
+    println c //=> Undefined variable "c".
 end
 
 println b

@@ -4,9 +4,9 @@ fun floor <- decimal begin
 
     // decrease/increase the decimal by 1 till its less than 1
     if decimal >= 0 begin
-        for ; decimal > 1; decimal = decimal - 1 do nil
+        for ; decimal > 1; decimal = decimal - 1 do var _
     else
-        for ; decimal < -1; decimal = decimal + 1 do nil
+        for ; decimal < -1; decimal = decimal + 1 do var _
     end
 
     // decrease/increase the initial decimal value by what it currently is to get the value rounded off

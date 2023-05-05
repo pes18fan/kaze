@@ -34,15 +34,15 @@ module Kaze
     # fun_decl        -> "fun" function ;
     # function        -> IDENTIFIER ( "<-" parameters )? block ;
     # parameters      -> IDENTIFIER ( "," IDENTIFIER )* ;
-    # var_decl        -> "var" IDENTIFIER ( "=" expression )? "\n" ;
+    # var_decl        -> "var" IDENTIFIER ( "=" expression )? ;
 
     # statement       -> expr_stmt | for_stmt | if_stmt | println_stmt | return_stmt | while_stmt | block ;
 
     # if_stmt         -> "if" expression "then" statement ( "else" statement )? ;
-    # expr_stmt       -> expression "\n" ;
+    # expr_stmt       -> call | assign ;
     # for_stmt        -> "for" ( var_decl | expr_stmt )? ";" expression? ";" expression ( "do" statement | block ) ;
-    # println_stmt    -> "println" expression "\n" ;
-    # return_stmt     -> "return" expression? "\n" ;
+    # println_stmt    -> "println" expression ;
+    # return_stmt     -> "return" expression? ;
     # while_stmt      -> "while" expression ( "do" statement | block ) ;
     # block           -> "begin" declaration* "end"
 

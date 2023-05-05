@@ -210,11 +210,12 @@ module Kaze
     end
 
     private def stringify(object : VG)
+      escape_seqs = ['n', 't']
+      escaped_chars = ["\n", "\t"]
       return "nil" if object == nil
+      text = object.to_s
 
       if object.class == Float64
-        text = object.to_s
-
         if text.ends_with?(".0")
           text = text[0...(text.size - 2)]
         end
@@ -222,7 +223,11 @@ module Kaze
         return text
       end
 
-      return object.to_s
+      # Replace escape sequences
+      text.gsub(/^\\([#{escape_seqs.join}])$/) do |match|
+        char_idx = escape_seqs.index(match[1])
+        char_idx ? escaped_chars[char_idx] : match
+      end
     end
 
     private def return_stringify(object : VG)
