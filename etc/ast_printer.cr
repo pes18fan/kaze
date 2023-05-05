@@ -1,4 +1,4 @@
-require "./expr"
+require "../src/expr"
 
 module Kaze
   # Pretty printer for an AST.
