@@ -43,6 +43,11 @@ module Kaze
     end
 
     def define(name : String, value : VG)
+      # Don't define if the variable is named "_"
+      if name == "_"
+        return
+      end
+
       values[name] = value
     end
   end

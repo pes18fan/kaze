@@ -4,7 +4,7 @@ Please note that this is experimental software, and things have a high chance of
 
 # Syntax
 
-A program in Kaze consists of statements, seperated by newlines. No semicolons required!
+A program in Kaze consists of statements. Statements don't need a terminator (like a newline or semicolon).
 
 ## variables
 
@@ -135,4 +135,14 @@ Anonymous lambda functions can be created with the `lambda` keyword. They work s
 var a = lambda x: x * 2
 
 a(2) //=> 4
+```
+
+## Note on statement termination
+
+In Kaze, statements do not need any terminators like a newline or a semicolon. This is due to expression statements in Kaze being nonexistent except in the REPL and except for a few cases like function calls.
+
+This does mean that if you wish to do something like `true and do_something()`, it won't work. For that, you can assign that to `_` by doing so:
+
+```kaze
+var _ = true and do_something()
 ```

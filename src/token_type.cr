@@ -10,7 +10,6 @@ module Kaze
     COLON
     DOT
     MINUS
-    NEWLINE
     PERCENT
     PLUS
     QUESTION

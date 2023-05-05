@@ -22,9 +22,6 @@ module Kaze
     # The position of the scanner in a line.
     private property line_current = 0
 
-    # True if the current line has either only whitespace or nothing.
-    private property line_is_empty = false
-
     # All of the reserved keywords.
     @@KEYWORDS : Hash(String, TT) = {
       "and"     => TT::AND,
@@ -144,7 +141,6 @@ module Kaze
       when ' ', '\r', '\t'
         # ignore whitespace
       when '\n'
-        add_token(TT::NEWLINE) unless @line_current == 1
         next_line
       when '"'
         string

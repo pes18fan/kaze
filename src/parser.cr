@@ -121,9 +121,9 @@ module Kaze
       if match?(TT::SEMICOLON)
         initializer = nil
       elsif match?(TT::VAR)
-        initializer = var_declaration(true)
+        initializer = var_declaration
       else
-        initializer = expression_statement(true)
+        initializer = expression_statement
       end
       consume(TT::SEMICOLON, "Expect \";\".") unless previous.type == TT::SEMICOLON
 
@@ -145,7 +145,7 @@ module Kaze
         body = Stmt::Block.new(
           [
             body,
-            Stmt::Expression.new(increment.as(Expr)),
+            Stmt::Var.new(Token.new(TT::IDENTIFIER, "_", nil, peek.line), increment.as(Expr)),
           ]
         )
       end
@@ -189,23 +189,16 @@ module Kaze
 
     private def println_statement : Stmt
       expr = expression
-      consume_newline("Expect \"\\n\" after expression.")
       Stmt::Println.new(expr)
     end
 
     private def return_statement : Stmt
       keyword = previous
-      value = nil
-
-      unless check?(TT::NEWLINE)
-        value = expression
-      end
-
-      consume_newline("Expect newline.")
+      value = expression
       Stmt::Return.new(keyword, value)
     end
 
-    private def var_declaration(no_consume_newline : Bool = false) : Stmt
+    private def var_declaration : Stmt
       name = consume(TT::IDENTIFIER, "Expect variable name.")
 
       initializer : Expr? = nil
@@ -213,7 +206,6 @@ module Kaze
         initializer = expression
       end
 
-      consume_newline("Expect \"\\n\" after variable declaration.") unless no_consume_newline
       return Stmt::Var.new(name, initializer)
     end
 
@@ -227,11 +219,15 @@ module Kaze
       Stmt::While.new(condition, body)
     end
 
-    private def expression_statement(no_consume_newline : Bool = false) : Stmt | Expr
+    private def expression_statement : Expr | Stmt
       expr = expression
       return expr if @repl
-      consume_newline("Expect \"\\n\" after expression.") unless no_consume_newline
-      Stmt::Expression.new(expr)
+
+      if expr.is_a?(Expr::Call) || expr.is_a?(Expr::Assign)
+        return Stmt::Expression.new(expr)
+      end
+      
+      raise error(peek, "Unexpected expression.")
     end
 
     private def function(kind : String) : Stmt::Function
@@ -261,7 +257,6 @@ module Kaze
     end
 
     private def block : Array(Stmt)
-      consume_newline("")
       statements = Array(Stmt).new
 
       until check?(TT::END) || at_end?
@@ -279,7 +274,6 @@ module Kaze
       end
 
       consume(TT::END, "Expect \"end\" after block.")
-      consume_newline("")
 
       statements
     end
@@ -536,10 +530,6 @@ module Kaze
       raise error(peek, message)
     end
 
-    private def consume_newline(message : String) : Token?
-      consume(TT::NEWLINE, message) unless Program.loc == 1 || implicit_end_block_needed?
-    end
-
     private def as_stmt(stmt : (Stmt | Expr)?, message : String)
       begin
         return stmt.as(Stmt)
@@ -583,7 +573,7 @@ module Kaze
       advance
 
       until at_end?
-        return if previous.type == TT::NEWLINE || TT::END
+        return if previous.type == TT::END
 
         case peek.type
         when TT::CLASS, TT::FUN, TT::VAR, TT::FOR, TT::IF, TT::WHILE, TT::PRINTLN, TT::RETURN
