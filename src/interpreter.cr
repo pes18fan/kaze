@@ -5,6 +5,7 @@ require "./runtime_error"
 require "./callable"
 require "./yawaraka"
 require "./function"
+require "./util"
 
 module Kaze
   # Interpreter to compute expressions and statements.
@@ -210,8 +211,6 @@ module Kaze
     end
 
     private def stringify(object : VG)
-      escape_seqs = ['n', 't']
-      escaped_chars = ["\n", "\t"]
       return "nil" if object == nil
       text = object.to_s
 
@@ -224,10 +223,7 @@ module Kaze
       end
 
       # Replace escape sequences
-      text.gsub(/^\\([#{escape_seqs.join}])$/) do |match|
-        char_idx = escape_seqs.index(match[1])
-        char_idx ? escaped_chars[char_idx] : match
-      end
+      Util.remove_escape_seqs(text)
     end
 
     private def return_stringify(object : VG)
