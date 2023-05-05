@@ -54,11 +54,11 @@ module Kaze
     end
 
     def visit_call_expr(expr : Expr::Call) : String
-      # nothing
+      parenthesize("call", expr.callee, *expr.arguments)
     end
 
     def visit_lambda_expr(expr : Expr::Lambda) : String
-      # nothing
+      parenthesize("lambda", *expr.params, expr.body)
     end
 
     # Encapsulates an expression in parentheses as a part of the final S-expression.
