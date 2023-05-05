@@ -2,7 +2,6 @@ require "./scanner"
 require "./parser"
 require "./interpreter"
 require "./token"
-require "./ast_printer"
 require "./runtime_error"
 
 module Kaze
