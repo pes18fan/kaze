@@ -2,7 +2,9 @@
 
 **STILL VERY EARLY IN DEVELOPMENT**
 
-An interpreted programming language. Based on everyone's favorite interpreted learning-language [Lox](https://www.craftinginterpreters.com). Focused on being easy to use and having intuitive syntax.
+A basic tree-walk interpreter for Kaze, a simple interpreted programming language. Based on everyone's favorite interpreted learning-language [Lox](https://www.craftinginterpreters.com). Focused on being easy to use and having intuitive syntax.
+
+I created this to learn some basic things about programming language development. Kaze will recieve a much faster and more optimized bytecode-compiling interpreter in the future.
 
 # quickstart
 
