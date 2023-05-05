@@ -1,5 +1,0 @@
-fun stuff begin
-    return "hell yeah"
-end
-
-println stuff()

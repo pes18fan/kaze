@@ -1,0 +1,3 @@
+var fibrec = lambda n, prev, curr: n <= 0 ? curr : fibrec(n - 1, prev + curr, prev)
+var fib = lambda n: fibrec(n + 1, 1, 0)
+println fib(40)

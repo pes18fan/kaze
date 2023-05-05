@@ -1,3 +1,0 @@
-fun epic begin println "epic!" end
-
-epic()
