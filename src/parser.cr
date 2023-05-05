@@ -5,6 +5,15 @@ require "./stmt"
 module Kaze
   # The language parser.
   class Parser
+    # Precedence rules going from lowest to highest:
+    # Name            Operators       Associativity
+    # Equality        == !=           Left to right
+    # Comparison      > >= < <=       Left to right
+    # Term            - +             Left to right
+    # Factor          / *             Left to right
+    # Unary           ! -             Right to left
+    # Ternary         ?:              Right to left
+
     # Expression grammar:
     # expression      -> lambda ;
 
@@ -226,7 +235,7 @@ module Kaze
       if expr.is_a?(Expr::Call) || expr.is_a?(Expr::Assign)
         return Stmt::Expression.new(expr)
       end
-      
+
       raise error(peek, "Unexpected expression.")
     end
 
