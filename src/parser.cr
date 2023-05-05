@@ -273,13 +273,15 @@ module Kaze
         statements.push(as_stmt(declaration, "Expect statement."))
       end
 
-      end_block
-      statements
-    end
+      # throw an error if a block containing a return statement doesn't have it as the last element
+      if statements.any? { |stmt| stmt.is_a?(Stmt::Return) } && statements.last.is_a?(Stmt::Return) == false
+        error(peek, "Return statements must appear in the end of a block.")
+      end
 
-    private def end_block
       consume(TT::END, "Expect \"end\" after block.")
       consume_newline("")
+
+      statements
     end
 
     private def assignment : Expr
