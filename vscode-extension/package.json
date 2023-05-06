@@ -1,0 +1,25 @@
+{
+  "name": "kaze",
+  "displayName": "kaze",
+  "description": "language support for the kaze programming language",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.77.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "kaze",
+      "aliases": ["Kaze", "kaze"],
+      "extensions": [".kaze",".kz"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "kaze",
+      "scopeName": "source.kaze",
+      "path": "./syntaxes/kaze.tmLanguage.json"
+    }]
+  }
+}

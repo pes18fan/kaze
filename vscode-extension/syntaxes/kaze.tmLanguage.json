@@ -1,0 +1,108 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "Kaze",
+    "patterns": [
+        { "include": "#comments" },
+        { "include": "#keywords" },
+        { "include": "#operators" },
+        { "include": "#numerics" },
+        { "include": "#booleans" },
+        { "include": "#strings" },
+        { "include": "#variables" }
+    ],
+    "repository": {
+        "keywords": {
+            "patterns": [
+                {
+                    "match": "\\b(if|else|while|for|then|do|fun|begin|end|return|break|next)\\b",
+                    "name": "keyword.control.kaze"
+                },
+                {
+                    "name": "keyword.other.kaze",
+                    "match": "\\b(println|lambda)\\b"
+                },
+                {
+                    "name": "keyword.declaration.kaze",
+                    "match": "\\b(var)\\b"
+                }
+            ]
+        },
+        "comments": {
+            "patterns": [
+                {
+                    "name": "comment.line.kaze",
+                    "match": "//.*"
+                },
+                {
+                    "name": "comment.block.kaze",
+                    "begin": "/\\*",
+                    "end": "\\*/"
+                }
+            ]
+        },
+        "variables": {
+            "patterns": [
+                {
+                    "name": "variable.language.kaze",
+                    "match": "\\b(self)\\b"
+                },
+                {
+                    "name": "variable.other.kaze",
+                    "match": "\\b[\\_$a-z][\\_$a-zA-Z0-9\\?\\!]*\\b"
+                }
+            ]
+        },
+        "operators": {
+            "patterns": [
+                {
+                    "name": "keyword.operator.arithmetic.kaze",
+                    "match": "\\+|-|\\*|\\/|\\%"
+                },
+                {
+                    "name": "keyword.operator.comparison.kaze",
+                    "match": "==|\\!="
+                },
+                {
+                    "name": "keyword.operator.relational.kaze",
+                    "match": "\\<\\=|\\>\\=|\\<|\\>"
+                },
+                {
+                    "name": "keyword.operator.logical.kaze",
+                    "match": "\\b(and|or|not)\\b"
+                },
+                {
+                    "name": "keyword.operator.assignment.kaze",
+                    "match": "\\="
+                }
+            ]
+        },
+        "numerics": {
+            "patterns": [
+                {
+                    "name": "constant.numeric.decimal.kaze",
+                    "match": "\\b[0-9]+(\\.[0-9]+)?\\b"
+                }
+            ]
+        },
+        "booleans": {
+            "patterns": [
+                {
+                    "name": "constant.boolean.kaze",
+                    "match": "\\b(true|false)\\b"
+                }
+            ]
+        },
+        "strings": {
+            "name": "string.quoted.double.kaze",
+            "begin": "\"",
+            "end": "\"",
+            "patterns": [
+                {
+                    "name": "constant.character.escape.kaze",
+                    "match": "\\\\."
+                }
+            ]
+        }
+    },
+    "scopeName": "source.kaze"
+}
