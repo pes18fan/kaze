@@ -20,6 +20,10 @@ Or fire up a REPL by invoking the interpreter without any args:
 kaze
 ```
 
+## vscode extension
+
+This repo includes a VSCode extension that provides syntax highlighting for the language! To use it, simply move the folder into your `.vscode/extensions/` directory in your home folder, which is `~` in Linux and `C:\Users\<username>` in Windows.
+
 # building
 
 You need the following to build Kaze:
