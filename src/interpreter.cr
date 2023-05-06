@@ -6,6 +6,7 @@ require "./callable"
 require "./yawaraka"
 require "./function"
 require "./util"
+require "./return"
 
 module Kaze
   # Interpreter to compute expressions and statements.
@@ -34,6 +35,8 @@ module Kaze
         end
       rescue err : RuntimeError
         Program.runtime_error(err)
+      rescue return_err : Return
+        Program.runtime_error(RuntimeError.new(Token.new(TT::RETURN, "return", nil, 0, 0),  "Cannot use \"return\" outside a function."))
       end
     end
 
@@ -50,6 +53,8 @@ module Kaze
         end
       rescue err : RuntimeError
         Program.runtime_error(err)
+      rescue return_err : Return
+        Program.runtime_error(RuntimeError.new(Token.new(TT::RETURN, "return", nil, 1, 0),  "Cannot use \"return\" outside a function."))
       end
     end
 
