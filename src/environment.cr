@@ -8,7 +8,7 @@ module Kaze
     property enclosing
 
     # The values in the environment.
-    private property values = Hash(String, VG).new
+    property values = Hash(String, VG).new
 
     def initialize
       @enclosing = nil
@@ -55,6 +55,24 @@ module Kaze
     # If the variable name is `_`, no definition is done.
     def define(name : String, value : VG)
       values[name] = value unless name == "_"
+    end
+
+    def ancestor(distance : Int32) : Environment
+      environment = self
+
+      (1...distance).each do
+        environment = environment.as(Environment).enclosing
+      end
+
+      environment.as(Environment)
+    end
+
+    def get_at(distance : Int32, name : String)
+      ancestor(distance).values[name]
+    end
+
+    def assign_at(distance : Int32, name : Token, value : VG)
+      ancestor(distance).values[name.lexeme] = value
     end
   end
 end

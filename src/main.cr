@@ -1,5 +1,6 @@
 require "./scanner"
 require "./parser"
+require "./resolver"
 require "./interpreter"
 require "./token"
 require "./runtime_error"
@@ -60,6 +61,11 @@ module Kaze
 
       parser = Parser.new(tokens.as(Array(Token)), repl)
       statements = parser.parse
+
+      return if @@had_error
+
+      resolver = Resolver.new(@@interpreter)
+      resolver.resolve(statements)
 
       return if @@had_error
 

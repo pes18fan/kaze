@@ -22,6 +22,7 @@ module Kaze
     # Also defines the standard library functions in the global environment.
     def initialize
       @environment = @globals
+      @locals = Hash(Expr, Int32).new
 
       @globals.define("clock", Yawaraka::Clock.new)
       @globals.define("scanln", Yawaraka::Scanln.new)
@@ -35,8 +36,6 @@ module Kaze
         end
       rescue err : RuntimeError
         Program.runtime_error(err)
-      rescue return_err : Return
-        Program.runtime_error(RuntimeError.new(Token.new(TT::RETURN, "return", nil, 0, 0),  "Cannot use \"return\" outside a function."))
       end
     end
 
@@ -53,8 +52,6 @@ module Kaze
         end
       rescue err : RuntimeError
         Program.runtime_error(err)
-      rescue return_err : Return
-        Program.runtime_error(RuntimeError.new(Token.new(TT::RETURN, "return", nil, 1, 0),  "Cannot use \"return\" outside a function."))
       end
     end
 
@@ -188,7 +185,17 @@ module Kaze
 
     # Evaluates a variable expression i.e. a variable being used as an expression.
     def visit_variable_expr(expr : Expr::Variable) : VG
-      @environment.get(expr.name)
+      look_up_variable(expr.name, expr)
+    end
+
+    private def look_up_variable(name : Token, expr : Expr) : VG
+      distance = @locals[expr]?
+
+      unless distance.nil?
+        return @environment.get_at(distance, name.lexeme)
+      else
+        return @globals.get(name)
+      end
     end
 
     # Evaluates a anonymous lambda function.
@@ -200,7 +207,15 @@ module Kaze
     # Evaluates an assignment expression.
     def visit_assign_expr(expr : Expr::Assign) : VG
       value = evaluate(expr.value)
-      @environment.assign(expr.name, value)
+
+      distance = @locals[expr]?
+
+      unless distance.nil?
+        @environment.assign_at(distance, expr.name, value)
+      else
+        @globals.assign(expr.name, value)
+      end
+
       value
     end
 
@@ -263,6 +278,10 @@ module Kaze
     # Executes a statement.
     private def execute(stmt : Stmt)
       stmt.accept(self)
+    end
+
+    def resolve(expr : Expr, depth : Int32)
+      @locals[expr] = depth
     end
 
     # Creates a new environment for a block, and executes the block's statement array.

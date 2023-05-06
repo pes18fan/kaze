@@ -3,7 +3,8 @@ module Kaze
 
   # Enum consisting of all the possible token types.
   enum TokenType
-    # Single-character tokens.
+    # Single-character tokens:
+
     LEFT_PAREN
     RIGHT_PAREN
     COMMA
@@ -17,7 +18,8 @@ module Kaze
     SLASH
     STAR
 
-    # One or two character tokens.
+    # One or two character tokens:
+
     BANG_EQUAL
     EQUAL
     EQUAL_EQUAL
@@ -27,12 +29,14 @@ module Kaze
     LESS
     LESS_EQUAL
 
-    # Literals.
+    # Literals:
+
     IDENTIFIER
     STRING
     NUMBER
 
-    # Keywords.
+    # Keywords:
+
     AND
     BEGIN
     CLASS
