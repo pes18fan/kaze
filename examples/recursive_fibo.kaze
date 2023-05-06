@@ -4,10 +4,12 @@ end
 
 var a = clock()
 
-for var i = 0; i < 25; i = i + 1 begin
+println 1
+
+for var i = 0; i <= 25; i = i + 1 begin
     println fib(i)
 end
 
 var b = clock()
 
-println b - a // around 6 seconds in the optimized interpreter
+println b - a // around 11.6 seconds in the optimized interpreter
