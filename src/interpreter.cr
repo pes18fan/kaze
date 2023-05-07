@@ -280,6 +280,7 @@ module Kaze
       stmt.accept(self)
     end
 
+    # Resloves an expression.
     def resolve(expr : Expr, depth : Int32)
       @locals[expr] = depth
     end

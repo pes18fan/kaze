@@ -6,10 +6,12 @@ module Kaze
     def initialize(@declaration : Stmt::Function, @closure : Environment)
     end
 
+    # The number of arguments the function takes.
     def arity : Int32
       @declaration.params.size
     end
 
+    # Executes the function.
     def call(interpreter : Interpreter, arguments : Array(VG)) : VG
       environment = Environment.new(@closure)
 
@@ -26,7 +28,7 @@ module Kaze
       end
       nil
     end
-
+    
     def to_s : String
       @declaration.name.nil? ? "<lambda fun>" : "<fun #{@declaration.name.as(Token).lexeme}>"
     end

@@ -3,6 +3,9 @@ require "./stmt"
 require "./interpreter"
 
 module Kaze
+  # The resolver.
+  # Resolves variable locations so that the interpreter can know exactly where a variable is, and what it is.
+  # Also checks for semantic errors like self-assignment in variable definitions and `return`s outside a function.
   class Resolver
     include Expr::Visitor
     include Stmt::Visitor

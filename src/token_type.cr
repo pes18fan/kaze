@@ -1,4 +1,5 @@
 module Kaze
+  # Short alias for the `TokenType` enum.
   alias TT = TokenType
 
   # Enum consisting of all the possible token types.

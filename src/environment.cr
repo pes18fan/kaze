@@ -57,6 +57,7 @@ module Kaze
       values[name] = value unless name == "_"
     end
 
+    # Returns the ancestor environment at a particular distance of scopes away.
     def ancestor(distance : Int32) : Environment
       environment = self
 
@@ -67,10 +68,12 @@ module Kaze
       environment.as(Environment)
     end
 
+    # Does the same thing as `Environment#get`, except from a specific ancestor environment.
     def get_at(distance : Int32, name : String)
       ancestor(distance).values[name]
     end
 
+    # Does the same thing as `Environment#assign`, except from a specific ancestor environment.
     def assign_at(distance : Int32, name : Token, value : VG)
       ancestor(distance).values[name.lexeme] = value
     end

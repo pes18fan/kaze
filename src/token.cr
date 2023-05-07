@@ -1,7 +1,7 @@
 require "./token_type"
 
 module Kaze
-  # Class for a token scanned by the scanner.
+  # A token in a source file.
   class Token
     # The type of the token.
     property type : TT

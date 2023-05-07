@@ -533,12 +533,10 @@ module Kaze
     # `true`, `false`, `nil`, any number or string literal, identifiers i.e. variable names, or grouping expressions i.e. parentheses.
     # An exception is raised if none of those are found.
     private def primary : Expr
-      # Return false, true or nil.
       return Expr::Literal.new(false) if match?(TT::FALSE)
       return Expr::Literal.new(true) if match?(TT::TRUE)
       return Expr::Literal.new(nil) if match?(TT::NIL)
 
-      # Return the literal value.
       return Expr::Literal.new(previous.literal) if match?(TT::NUMBER, TT::STRING)
 
       return Expr::Variable.new(previous) if match?(TT::IDENTIFIER)
@@ -625,7 +623,7 @@ module Kaze
       ParseError.new
     end
 
-    # Discards tokens until reaching EOF or until it finds one of particular keywords.
+    # Discards tokens until reaching EOF or until it finds one of some particular keywords.
     private def synchronize
       advance
 

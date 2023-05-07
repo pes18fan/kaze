@@ -2,7 +2,7 @@ require "./token"
 require "./main"
 
 module Kaze
-  # A scanner that scan a file or line for tokens, parses and returns them.
+  # A scanner that scans a file or line for tokens, parses and returns them.
   class Scanner
     # The source that the scanner scans. May be a file or a line in the REPL.
     private property source : String

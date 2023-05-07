@@ -52,7 +52,12 @@ module Kaze
       end
     end
 
-    # Sends `source` to the scanner to be scanned.
+    # Runs `source`.
+    # The source is first sent to the scanner which returns tokens out of it.
+    # The tokens are then parsed by the parser.
+    # The resolver then takes the parsed statements and does semantic analysis.
+    # Finally, the statements are sent to the interpreter to be executed.
+    # The function may return after each of these steps if it has an error.
     private def run(source : String, repl : Bool)
       scanner = Scanner.new(source)
       tokens = scanner.scan_tokens
@@ -86,6 +91,7 @@ module Kaze
       report(line, "", message, column)
     end
 
+    # Reports a runtime error.
     def self.runtime_error(error : RuntimeError)
       STDERR.puts "[line #{error.token.line}] Error: #{error.message}"
       @@had_runtime_error = true

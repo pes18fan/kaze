@@ -1,4 +1,5 @@
 module Kaze
+  # Utility functions.
   module Util
     extend self
 
