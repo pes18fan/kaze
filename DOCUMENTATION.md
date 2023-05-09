@@ -141,6 +141,28 @@ end
 greet("hey!") //=> "hey!"
 ```
 
+Return a value from a function with the `return` statement. `return`s must always be at the end of a block, and thus any expression or value after the `return` must be for the return statement itself.
+
+```kaze
+fun one begin
+    return 1
+end
+
+fun return_one begin
+    return
+    one()
+end
+
+fun return_two begin
+    return 2
+    one()
+end
+
+print(one()) //=> 1
+print(return_one()) // returns 1, not nil
+print(return_two()) // Error at "return": Return statement must be at the end of a block.
+```
+
 ## lambda
 
 Anonymous lambda functions, just like in Python, can be created with the `lambda` keyword. They work similarlty as they would in Python, as in the fact that their body must only be one expression, which is what they return. Lambdas may take zero or more arguments.
