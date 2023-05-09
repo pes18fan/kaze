@@ -1,6 +1,12 @@
-Welcome to kaze! Kaze is a simple interpreted kanguage built for scripting, with a minimal syntax inspired by Ruby, Hana and Lox designed for ease of use. Enjoy your stay!
+Welcome to kaze! Kaze is a super simple interpreted language designed as a small toy project of mine. It is mainly influenced by Ruby, Lua and Lox (on which the interpreter itself is based!). Enjoy your stay!
 
 Please note that this is experimental software, and things have a high chance of breaking.
+
+Get started with a hello world:
+
+```kaze
+print("hello, world!\n")
+```
 
 # Syntax
 
@@ -20,7 +26,15 @@ If you try to use an unitialized variable, the interpreter will throw an error!
 ```kaze
 var undec
 
-println undec // "Variable "undec" not assigned to a value."
+print(undec) // Variable "undec" not assigned to a value.
+```
+
+Variable names support any number of alphanumeric characters, underscores, question marks and exclamation marks. However, they must begin with a letter.
+
+```kaze
+var epic! // valid
+var a?b // valid
+var 2a // invalid
 ```
 
 ## blocks
@@ -111,7 +125,7 @@ For example:
 
 ```kaze
 fun hello_there begin
-    println "hello!"
+    print("hello!\n")
 end
 
 hello_there() //=> "hello!"
@@ -121,7 +135,7 @@ Or with params:
 
 ```kaze
 fun greet <- greeting begin
-    println greeting
+    print(greeting)
 end
 
 greet("hey!") //=> "hey!"
@@ -129,12 +143,58 @@ greet("hey!") //=> "hey!"
 
 ## lambda
 
-Anonymous lambda functions can be created with the `lambda` keyword. They work similarlty like in Python, as in the fact that their body must only be one expression, which is what they return. Lambdas may take zero or more arguments.
+Anonymous lambda functions, just like in Python, can be created with the `lambda` keyword. They work similarlty as they would in Python, as in the fact that their body must only be one expression, which is what they return. Lambdas may take zero or more arguments.
 
 ```kaze
 var a = lambda x: x * 2
 
 a(2) //=> 4
+```
+
+# Classes
+
+Kaze supports basic OOP patterns with classes.
+
+```kaze
+class Greeter begin
+    greet begin
+        print("hello, friend!")
+    end
+end
+
+var greeter = Greeter()
+greeter.greet() // hello, friend!
+```
+
+You can assign custom properties to classes via the `.` syntax. Such properties can be accessed using the special variable `self`, which represents the instance, similar to `this` in languages like Java.
+
+```kaze
+class Greeter begin
+    greet begin
+        print("hello, " + self.name + "!")
+    end
+end
+
+var greeter = Greeter()
+greeter.name = "p18f"
+greeter.greet() // hello, p18f!
+```
+
+Class constructors are also supported. A constructor is named `init`.
+
+```kaze
+class Greeter begin
+    init <- name begin
+        self.name = name
+    end
+
+    greet begin
+        print("hello, " + self.name + "!\n")
+    end
+end
+
+var greeter = Greeter("p18f")
+greeter.greet() // hello, p18f!
 ```
 
 ## Note on statement termination

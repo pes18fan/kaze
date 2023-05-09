@@ -1,0 +1,12 @@
+class Greeter begin
+    init <- name begin
+        self.name = name
+    end
+
+    greet begin
+        print("hello, " + self.name + "!\n")
+    end
+end
+
+var greeter = Greeter("p18f")
+greeter.greet()

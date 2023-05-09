@@ -2,12 +2,12 @@ fun make_counter begin
     var i = 0
     fun count begin
         i = i + 1
-        println i
+        print(i + "\n")
     end
 
     return count
 end
 
 var counter = make_counter()
-counter()
-counter()
+counter()  //=> 1
+counter()  //=> 2

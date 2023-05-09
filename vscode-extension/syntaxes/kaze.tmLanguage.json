@@ -8,22 +8,24 @@
         { "include": "#numerics" },
         { "include": "#booleans" },
         { "include": "#strings" },
+        { "include": "#functions" },
+        { "include": "#classes" },
         { "include": "#variables" }
     ],
     "repository": {
         "keywords": {
             "patterns": [
                 {
-                    "match": "\\b(if|else|while|for|then|do|fun|begin|end|return|break|next)\\b",
+                    "match": "\\b(if|else|while|for|then|do|begin|end|return|break|next)\\b",
                     "name": "keyword.control.kaze"
                 },
                 {
                     "name": "keyword.other.kaze",
-                    "match": "\\b(println|lambda)\\b"
+                    "match": "\\b(lambda)\\b"
                 },
                 {
                     "name": "keyword.declaration.kaze",
-                    "match": "\\b(var)\\b"
+                    "match": "\\b(var|fun|class)\\b"
                 }
             ]
         },
@@ -49,6 +51,22 @@
                 {
                     "name": "variable.other.kaze",
                     "match": "\\b[\\_$a-z][\\_$a-zA-Z0-9\\?\\!]*\\b"
+                }
+            ]
+        },
+        "functions": {
+            "patterns": [
+                {
+                    "name": "entity.name.function",
+                    "match": "\\b(?<=fun\\s)[a-zA-Z_]\\w*[!?]?(?=\\s*(<-)?)\\b"
+                }
+            ]
+        },
+        "classes": {
+            "patterns": [
+                {
+                    "name": "entity.name.class",
+                    "match": "\\b[A-Z][a-zA-Z0-9_]*\\b"
                 }
             ]
         },

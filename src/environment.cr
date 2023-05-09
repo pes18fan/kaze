@@ -10,11 +10,9 @@ module Kaze
     # The values in the environment.
     property values = Hash(String, VG).new
 
-    def initialize
-      @enclosing = nil
-    end
-
-    def initialize(@enclosing : Environment)
+    # Initialize an environment instance.
+    # The enclosing environment is `nil` if no argument is provided, indicating that that environment is global.
+    def initialize(@enclosing : Environment? = nil)
     end
 
     # Returns the value of the variable matching `name`'s lexeme.
@@ -61,8 +59,11 @@ module Kaze
     def ancestor(distance : Int32) : Environment
       environment = self
 
-      (1...distance).each do
+      i = 0
+
+      while i < distance
         environment = environment.as(Environment).enclosing
+        i += 1
       end
 
       environment.as(Environment)

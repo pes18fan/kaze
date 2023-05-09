@@ -4,9 +4,9 @@ var fib = lambda n: fibrec(n + 1, 1, 0)
 var a = clock()
 
 for var i = 1; i <= 25; i = i + 1 begin
-    println fib(i)
+    print(fib(i) + "\n")
 end
 
 var b = clock()
 
-println b - a // 0.006 seconds in the optimized interpreter :O
+print(b - a) // 0.006 seconds in the optimized interpreter :O

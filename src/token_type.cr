@@ -51,12 +51,11 @@ module Kaze
     LAMBDA
     NIL
     NOT
-    OR
-    PRINTLN
+    OR    
     RETURN
+    SELF
     SUPER
     THEN
-    THIS
     TRUE
     VAR
     WHILE

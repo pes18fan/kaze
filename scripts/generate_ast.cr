@@ -9,21 +9,24 @@ define_ast(output_dir, "expr", [
   "Assign    $     name : Token, value : Expr",
   "Binary    $     left : Expr, operator : Token, right : Expr",
   "Call      $     callee : Expr, paren : Token, arguments : Array(Expr)",
+  "Get       $     object : Expr, name : Token",
   "Grouping  $     expression : Expr",
   "Lambda    $     params : Array(Token), body : Stmt",
   "Literal   $     value : VG",
   "Logical   $     left : Expr, operator : Token, right : Expr",
+  "Self      $     keyword : Token",
+  "Set       $     object : Expr, name : Token, value : Expr",
   "Unary     $     operator : Token, right : Expr",
   "Ternary   $     condition : Expr, left : Expr, right : Expr",
   "Variable  $     name : Token"
-], "(String | Float64 | Bool | Callable)?")
+], "(String | Float64 | Bool | Callable | Instance)?")
 
 define_ast(output_dir, "stmt", [
   "Block        $   statements : Array(Stmt)",
+  "Class        $   name : Token, methods : Array(Stmt::Function)",
   "Expression   $   expression : Expr",
   "Function     $   name : Token?, params : Array(Token), body : Array(Stmt)",
   "If           $   condition : Expr, then_branch : Stmt, else_branch : Stmt?",
-  "Println      $   expression : Expr",
   "Return       $   keyword : Token, value : Expr?",
   "Var          $   name : Token, initializer : Expr?",
   "While        $   condition : Expr, body : Stmt"
@@ -41,7 +44,9 @@ private def define_ast(output_dir : String, file_name : String, types : Array(St
     file.puts "module Kaze"
 
     unless visitor_generics.empty?
-      file.puts "  # All the types a visitor function can return."
+      file.puts "  # Visitor generics."
+      file.puts "  # These are all the types a visitor function can return."
+      file.puts "  # In simple terms, all the types that a variable in Kaze can have."
       file.puts "  alias VG = #{visitor_generics}"
       file.puts
     end

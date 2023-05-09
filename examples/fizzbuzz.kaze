@@ -6,5 +6,5 @@ for var i = 1; i <= 100; i = i + 1 begin
     if i % 3 == 0 then str = str + "fizz"
     if i % 5 == 0 then str = str + "buzz"
 
-    println str + i
+    print(str + i + "\n")
 end

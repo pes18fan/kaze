@@ -19,7 +19,7 @@ fun floor <- decimal begin
     return j
 end
 
-println floor(69.520) //=> 70
-println floor(69.420) //=> 69
-println floor(-69.420) //=> 69
-println floor(-69.520) //=> 69 (what???)
+print(floor(69.520) + "\n") //=> 70
+print(floor(69.420) + "\n") //=> 69
+print(floor(-69.420) + "\n") //=> 69
+print(floor(-69.520) + "\n") //=> 69 (what???)

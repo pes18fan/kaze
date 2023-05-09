@@ -1,6 +1,7 @@
 require "./expr"
 require "./stmt"
 require "./interpreter"
+require "./util"
 
 module Kaze
   # The resolver.
@@ -15,11 +16,22 @@ module Kaze
     private enum FunctionType
       NONE
       FUNCTION
+      INITIALIZER
+      LAMBDA
+      METHOD
+    end
+
+    private enum ClassType
+      NONE
+      CLASS
     end
 
     def initialize(@interpreter : Interpreter)
-      @scopes = Array(Hash(String, Bool)).new
+      # A stack, represented as an array.
+      @scopes = Util::Stack(Hash(String, Bool)).new
+
       @current_function = FunctionType::NONE
+      @current_class = ClassType::NONE
     end
 
     def resolve(statements : Array(Stmt))
@@ -43,6 +55,32 @@ module Kaze
       nil
     end
 
+    def visit_class_stmt(stmt : Stmt::Class) : Nil
+      enclosing_class = @current_class
+      @current_class = ClassType::CLASS
+
+      declare(stmt.name)
+      define(stmt.name)
+
+      begin_scope
+      @scopes.peek["self"] = true
+
+      stmt.methods.each do |method|
+        declaration = FunctionType::METHOD
+
+        if method.name.as(Token).lexeme == "init"
+          declaration = FunctionType::INITIALIZER
+        end
+
+        resolve_function(method, declaration)
+      end
+
+      end_scope
+
+      @current_class = enclosing_class
+      nil
+    end
+
     def visit_expression_stmt(stmt : Stmt::Expression) : Nil
       resolve(stmt.expression)
       nil
@@ -54,17 +92,19 @@ module Kaze
       resolve(stmt.else_branch) unless stmt.else_branch.nil?
     end
 
-    def visit_println_stmt(stmt : Stmt::Println) : Nil
-      resolve(stmt.expression)
-      nil
-    end
-
     def visit_return_stmt(stmt : Stmt::Return) : Nil
       if @current_function == FunctionType::NONE
         Program.error(stmt.keyword, "Can't return from top-level code.")
       end
 
-      resolve(stmt.value) unless stmt.value.nil?
+      unless stmt.value.nil?
+        if @current_function == FunctionType::INITIALIZER
+          Program.error(stmt.keyword, "Can't return a value from an initializer.")
+        end
+
+        resolve(stmt.value)
+      end
+      
       nil
     end
 
@@ -82,10 +122,13 @@ module Kaze
       nil
     end
 
+    # The variable isn't resolved if it is named `_`.
+    # That is due to the `_` variables not creating any variable definition.
+    # This is useful to evaluate expressions since Kaze doesn't support expression statements in most cases.
     def visit_var_stmt(stmt : Stmt::Var) : Nil
-      declare(stmt.name)
+      declare(stmt.name) unless stmt.name.lexeme == "_"
       resolve(stmt.initializer) unless stmt.initializer.nil?
-      define(stmt.name)
+      define(stmt.name) unless stmt.name.lexeme == "_"
       nil
     end
 
@@ -123,6 +166,26 @@ module Kaze
       nil
     end
 
+    def visit_get_expr(expr : Expr::Get) : Nil
+      resolve(expr.object)
+      nil
+    end
+
+    def visit_set_expr(expr : Expr::Set) : Nil
+      resolve(expr.value)
+      resolve(expr.object)
+      nil
+    end
+
+    def visit_self_expr(expr : Expr::Self) : Nil
+      if @current_class == ClassType::NONE
+        Program.error(expr.keyword, "Can't use \"self\" outside of a class.")
+      end
+
+      resolve_local(expr, expr.keyword)
+      nil
+    end
+
     def visit_grouping_expr(expr : Expr::Grouping) : Nil
       resolve(expr.expression)
       nil
@@ -144,8 +207,10 @@ module Kaze
     end
 
     def visit_variable_expr(expr : Expr::Variable) : Nil
-      if !@scopes.empty? && @scopes.last[expr.name.lexeme] == false
-        Program.error(expr.name, "Can't read local variable in its own initializer.")
+      # Must check if the key exists before trying to see if it has a `false` value.
+      # Not doing that throws a KeyError.
+      if !@scopes.empty? && @scopes.peek.has_key?(expr.name.lexeme)
+        Program.error(expr.name, "Can't read local variable in its own initializer.") if @scopes.peek[expr.name.lexeme] == false
       end
 
       resolve_local(expr, expr.name)
@@ -165,13 +230,13 @@ module Kaze
     end
 
     private def end_scope
-      @scopes.delete_at(0)
+      @scopes.pop
     end
 
     private def declare(name : Token)
       return if @scopes.empty?
 
-      scope = @scopes.last
+      scope = @scopes.peek
       if scope.has_key?(name.lexeme)
         Program.error(name, "Variable with the same name already exists in this scope.")
       end
@@ -182,19 +247,7 @@ module Kaze
     private def define(name : Token)
       return if @scopes.empty?
 
-      @scopes.last[name.lexeme] = true
-    end
-
-    private def resolve_local(expr : Expr, name : Token)
-      i = 0
-
-      while i <= @scopes.size - 1
-        if @scopes[i].has_key?(name.lexeme)
-          @interpreter.resolve(expr, i)
-        end
-
-        i += 1
-      end
+      @scopes.peek[name.lexeme] = true
     end
 
     private def resolve_function(function : Stmt::Function, type : FunctionType)
@@ -215,6 +268,9 @@ module Kaze
     end
 
     private def resolve_lambda(lambda : Expr::Lambda)
+      enclosing_function = @current_function
+      @current_function = FunctionType::LAMBDA
+
       begin_scope
 
       lambda.params.each do |param|
@@ -224,6 +280,21 @@ module Kaze
 
       resolve(lambda.body)
       end_scope
+
+      @current_function = enclosing_function
+    end
+
+    private def resolve_local(expr : Expr, name : Token)
+      i = @scopes.size - 1
+
+      while i >= 0
+        if @scopes[i].has_key?(name.lexeme)
+          @interpreter.resolve(expr, @scopes.size - 1 - i)
+          return
+        end
+
+        i -= 1
+      end
     end
   end
 end

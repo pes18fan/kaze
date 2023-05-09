@@ -5,6 +5,7 @@ require "./runtime_error"
 require "./callable"
 require "./yawaraka"
 require "./function"
+require "./kaze_class"
 require "./util"
 require "./return"
 
@@ -24,6 +25,8 @@ module Kaze
       @environment = @globals
       @locals = Hash(Expr, Int32).new
 
+      # Library function definitions.
+      @globals.define("print", Yawaraka::Print.new)
       @globals.define("clock", Yawaraka::Clock.new)
       @globals.define("scanln", Yawaraka::Scanln.new)
     end
@@ -126,7 +129,7 @@ module Kaze
           return left.as(Float64) + right.as(Float64)
         end
 
-        return stringify(left) + stringify(right)
+        return Util.stringify(left) + Util.stringify(right)
       when TT::SLASH
         check_number_operand(expr.operator, left, right)
         return left.as(Float64) / right.as(Float64) if right.as(Float64) != 0
@@ -168,6 +171,36 @@ module Kaze
       function.call(self, arguments)
     end
 
+    # Evaluates a get expression.
+    # Raises an exception if the expression's object is not a class instance.
+    def visit_get_expr(expr : Expr::Get) : VG
+      object = evaluate(expr.object)
+
+      if object.is_a?(Instance)
+        return object.as(Instance).get(expr.name)
+      end
+
+      raise RuntimeError.new(expr.name, "Only instances have properties.")
+    end
+
+    # Evaluates a set expression.
+    def visit_set_expr(expr : Expr::Set) : VG
+      object = evaluate(expr.object)
+
+      unless object.is_a?(Instance)
+        raise RuntimeError.new(expr.name, "Only instances have fields.")
+      end
+
+      value = evaluate(expr.value)
+      object.as(Instance).set(expr.name, value)
+      value
+    end
+
+    # Evaluates `self`.
+    def visit_self_expr(expr : Expr::Self) : VG
+      look_up_variable(expr.keyword, expr)
+    end
+
     # Evaluates a ternary i.e. conditional expression.
     # The expression on the right only evaluates if the one on the left is false.
     def visit_ternary_expr(expr : Expr::Ternary) : VG
@@ -201,7 +234,7 @@ module Kaze
     # Evaluates a anonymous lambda function.
     # This simply creates a new function without a name.
     def visit_lambda_expr(expr : Expr::Lambda) : VG
-      Function.new(Stmt::Function.new(nil, expr.params, [expr.body]), @environment)
+      Function.new(Stmt::Function.new(nil, expr.params, [expr.body]), @environment, false)
     end
 
     # Evaluates an assignment expression.
@@ -247,27 +280,12 @@ module Kaze
       a == b
     end
 
-    # Stringifies an expression value.
-    private def stringify(object : VG)
-      return "nil" if object == nil
-      text = object.to_s
 
-      if object.is_a?(Float64)
-        if text.ends_with?(".0")
-          text = text[0...(text.size - 2)]
-        end
-
-        return text
-      end
-
-      # Replace escape sequences.
-      Util.remove_escape_seqs(text)
-    end
 
     # Stringifies an expression value, but also prepends a `=>`.
     # Used in the REPL to show the return value of expressions.
     private def return_stringify(object : VG)
-      "=> #{stringify(object)}"
+      "=> #{Util.stringify(object)}"
     end
 
     # Evaluates an expression.
@@ -306,6 +324,22 @@ module Kaze
       nil
     end
 
+    # Interprets a class.
+    def visit_class_stmt(stmt : Stmt::Class) : Nil
+      @environment.define(stmt.name.lexeme, nil)
+
+      methods = Hash(String, Function).new
+
+      stmt.methods.each do |method|
+        function = Function.new(method, @environment, method.name.as(Token).lexeme == "init")
+        methods[method.name.as(Token).lexeme] = function
+      end
+
+      klass = KazeClass.new(stmt.name.lexeme, methods)
+      @environment.assign(stmt.name, klass)
+      nil
+    end
+
     # Executes an expression statement.
     def visit_expression_stmt(stmt : Stmt::Expression) : Nil
       evaluate(stmt.expression)
@@ -314,7 +348,7 @@ module Kaze
 
     # Executes a function statement i.e. a function definition.
     def visit_function_stmt(stmt : Stmt::Function) : Nil
-      function = Function.new(stmt, @environment)
+      function = Function.new(stmt, @environment, false)
       @environment.define(stmt.name.as(Token).lexeme, function)
       nil
     end
@@ -327,14 +361,6 @@ module Kaze
         execute stmt.else_branch.as(Stmt)
       end
 
-      nil
-    end
-
-    # Executes a println statement.
-    # Might be replaced by a native function.
-    def visit_println_stmt(stmt : Stmt::Println) : Nil
-      value = evaluate(stmt.expression)
-      puts stringify(value)
       nil
     end
 

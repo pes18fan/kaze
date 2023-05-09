@@ -1,6 +1,7 @@
 require "./token"
 require "./expr"
 require "./stmt"
+require "./parse_error"
 
 module Kaze
   # The language parser.
@@ -20,7 +21,7 @@ module Kaze
     # arguments       -> expression ( "," expression )* ;
 
     # lambda          -> "lambda" parameters ":" assignment ;
-    # assignment      -> IDENTIFIER "=" assignment | ternary ;
+    # assignment      -> ( call "." )? IDENTIFIER "=" assignment | ternary ;
     # ternary         -> ( logic_or "?" difference ":" difference ) | logic_or ;
     # logic_or        -> logic_and ( "or" logic_and )* ;
     # logic_and       -> equality ( "and" equality )* ;
@@ -32,32 +33,30 @@ module Kaze
     # quotient        -> modulo ( "/" modulo )* ;
     # modulo          -> unary ( "%" unary )* ;
     # unary           -> ( "!" | "-" ) unary | primary ;
-    # call            -> primary ( "(" arguments? ")" )* ;
+    # call            -> primary ( "(" arguments? ")" | "." IDENTIFIER )* ;
     # primary         -> NUMBER | STRING | IDENTIFIER | "true" | "false" | "nil" | "(" expression ")" ;
 
     # Parser grammar:
     # program         -> declaration* EOF ;
 
-    # declaration     -> fun_decl | var_decl | statement ;
+    # declaration     -> class_decl | fun_decl | var_decl | statement ;
 
+    # class_decl      -> "class" IDENTIFIER "begin" function* "end" ;
     # fun_decl        -> "fun" function ;
+
     # function        -> IDENTIFIER ( "<-" parameters )? block ;
     # parameters      -> IDENTIFIER ( "," IDENTIFIER )* ;
+
     # var_decl        -> "var" IDENTIFIER ( "=" expression )? ;
 
-    # statement       -> expr_stmt | for_stmt | if_stmt | println_stmt | return_stmt | while_stmt | block ;
+    # statement       -> expr_stmt | for_stmt | if_stmt | return_stmt | while_stmt | block ;
 
     # if_stmt         -> "if" expression "then" statement ( "else" statement )? ;
     # expr_stmt       -> call | assign ;
     # for_stmt        -> "for" ( var_decl | expr_stmt )? ";" expression? ";" expression ( "do" statement | block ) ;
-    # println_stmt    -> "println" expression ;
     # return_stmt     -> "return" expression? ;
     # while_stmt      -> "while" expression ( "do" statement | block ) ;
     # block           -> "begin" declaration* "end"
-
-    # An exception that occured when parsing the source.
-    private class ParseError < Exception
-    end
 
     # Tokens obtained from the scanner.
     private getter tokens
@@ -74,13 +73,15 @@ module Kaze
     # Current position of the parser in the token list.
     private property current = 0
 
+    # Statement list.
+    private property statements : Array(Stmt)
+
     def initialize(@tokens : Array(Token), @repl : Bool)
+      @statements = Array(Stmt).new
     end
 
     # Parse an array of tokens.
     def parse : Array(Stmt) | (Stmt | Expr)?
-      statements = Array(Stmt).new
-
       until at_end?
         dec = declaration
 
@@ -88,14 +89,15 @@ module Kaze
           begin
             return dec
           rescue err : ParseError
+            Program.error(err.token, err.message.as(String))
             return nil
           end
         end
 
-        statements.push(dec.as(Stmt)) unless dec.nil?
+        @statements.push(dec.as(Stmt)) unless dec.nil?
       end
 
-      statements
+      @statements
     end
 
     # Parse an expression.
@@ -106,20 +108,77 @@ module Kaze
     # Parse a declaration.
     private def declaration : (Stmt | Expr)?
       begin
+        return class_declaration if match?(TT::CLASS)
         return function("function") if match?(TT::FUN)
         return var_declaration if match?(TT::VAR)
         return statement
       rescue err : ParseError
+        Program.error(err.token, err.message.as(String))
         synchronize
         return nil
       end
+    end
+
+    # Parse a class declaration.
+    private def class_declaration : Stmt
+      name = consume(TT::IDENTIFIER, "Expect class name.")
+      consume(TT::BEGIN, "Expect \"begin\" before class body.")
+
+      methods = Array(Stmt::Function).new
+
+      until check?(TT::END) || at_end?
+        methods.push(function("method"))
+      end
+
+      consume(TT::END, "Expect \"end\" after class body.")
+
+      Stmt::Class.new(name, methods)
+    end
+
+    # Parse a function definition.
+    private def function(kind : String) : Stmt::Function
+      name = consume(TT::IDENTIFIER, "Expect #{kind} name.")
+
+      # consume the left arrow UNLESS the next token is a begin keyword
+      # the begin keyword being there indicates that there are no params
+      consume(TT::LEFT_ARROW, "Expect \"<-\" after #{kind} name.") unless peek.type == TT::BEGIN
+
+      parameters = Array(Token).new
+
+      unless check?(TT::BEGIN)
+        loop do
+          if parameters.size >= 255
+            raise error(peek, "Can't have more than 255 parameters.")
+          end
+
+          parameters << consume(TT::IDENTIFIER, "Expect parameter name.")
+
+          break unless match?(TT::COMMA)
+        end
+      end
+
+      consume(TT::BEGIN, "Expect \"begin\" before #{kind} body.")
+      body = block
+
+      Stmt::Function.new(name, parameters, body)
+    end
+
+    # Parse a variable declaration. The initial value may be nil.
+    private def var_declaration : Stmt
+      name = consume(TT::IDENTIFIER, "Expect variable name.")
+
+      initializer : Expr? = nil
+      if match?(TT::EQUAL)
+        initializer = expression
+      end
+
+      return Stmt::Var.new(name, initializer)
     end
 
     # Parse a statement.
     private def statement : Stmt | Expr
       return for_statement if match?(TT::FOR)
       return if_statement if match?(TT::IF)
-      return println_statement if match?(TT::PRINTLN)
       return return_statement if match?(TT::RETURN)
       return while_statement if match?(TT::WHILE)
       return Stmt::Block.new(block) if match?(TT::BEGIN)
@@ -200,29 +259,28 @@ module Kaze
       Stmt::If.new(condition, then_branch, else_branch)
     end
 
-    # Parse a println statement.
-    private def println_statement : Stmt
-      expr = expression
-      Stmt::Println.new(expr)
-    end
-
     # Parse a return statement.
+    # A return statement must always be at the end of a block.
+    # If the next keyword it finds isn't `end`, it checks if the next statement is an expression statement and raises an exception if it is.
+    # If that's not the case, it tries to assign an expression as the return value.
+    # Since a ParseError is raised if the expression parser tries to parse a statement, we can simply catch that.
+    # Then, we can raise a more specific exception, instead of just "Expected expression".
     private def return_statement : Stmt
       keyword = previous
-      value = expression
-      Stmt::Return.new(keyword, value)
-    end
+      value = nil
+      unless check?(TT::END)
+        begin
+          if expression_statement_next?
+            raise error(keyword, "Return statement must be at the end of a block.")
+          end
 
-    # Parse a variable declaration. The initial value may be nil.
-    private def var_declaration : Stmt
-      name = consume(TT::IDENTIFIER, "Expect variable name.")
-
-      initializer : Expr? = nil
-      if match?(TT::EQUAL)
-        initializer = expression
+          value = expression
+        rescue err : ParseError
+          raise error(keyword, "Return statement must be at the end of a block.")
+        end
       end
 
-      return Stmt::Var.new(name, initializer)
+      Stmt::Return.new(keyword, value)
     end
 
     # Parse a while loop.
@@ -242,39 +300,11 @@ module Kaze
       expr = expression
       return expr if @repl
 
-      if expr.is_a?(Expr::Call) || expr.is_a?(Expr::Assign)
+      if expr.is_a?(Expr::Call) || expr.is_a?(Expr::Assign) || expr.is_a?(Expr::Set) || expr.is_a?(Expr::Get)
         return Stmt::Expression.new(expr)
       end
 
       raise error(peek, "Unexpected expression.")
-    end
-
-    # Parse a function definition.
-    private def function(kind : String) : Stmt::Function
-      name = consume(TT::IDENTIFIER, "Expect #{kind} name.")
-
-      # consume the left arrow UNLESS the next token is a begin keyword
-      # the begin keyword being there indicates that there are no params
-      consume(TT::LEFT_ARROW, "Expect \"<-\" after #{kind} name.") unless peek.type == TT::BEGIN
-
-      parameters = Array(Token).new
-
-      unless check?(TT::BEGIN)
-        loop do
-          if parameters.size >= 255
-            error(peek, "Can't have more than 255 parameters.")
-          end
-
-          parameters << consume(TT::IDENTIFIER, "Expect parameter name.")
-
-          break unless match?(TT::COMMA)
-        end
-      end
-
-      consume(TT::BEGIN, "Expect \"begin\" before #{kind} body.")
-      body = block
-
-      Stmt::Function.new(name, parameters, body)
     end
 
     # Parse a block, beginning with `begin` and terminating with `end`.
@@ -288,11 +318,6 @@ module Kaze
         end
 
         statements.push(as_stmt(declaration, "Expect statement."))
-      end
-
-      # throw an error if a block containing a return statement doesn't have it as the last element
-      if statements.any? { |stmt| stmt.is_a?(Stmt::Return) } && statements.last.is_a?(Stmt::Return) == false
-        error(peek, "Return statements must appear in the end of a block.")
       end
 
       consume(TT::END, "Expect \"end\" after block.")
@@ -311,6 +336,9 @@ module Kaze
         if expr.is_a?(Expr::Variable)
           name = expr.as(Expr::Variable).name
           return Expr::Assign.new(name, value)
+        elsif expr.is_a?(Expr::Get)
+          get = expr.as(Expr::Get)
+          return Expr::Set.new(get.object, get.name, value)
         end
 
         raise error(equals, "Invalid assignment target.")
@@ -327,7 +355,7 @@ module Kaze
         unless check?(TT::COLON)
           loop do
             if parameters.size >= 255
-              error(peek, "Can't have more than 255 parameters.")
+              raise error(peek, "Can't have more than 255 parameters.")
             end
 
             parameters << consume(TT::IDENTIFIER, "Expect parameter name.")
@@ -500,7 +528,7 @@ module Kaze
       unless check?(TT::RIGHT_PAREN)
         loop do
           if arguments.size >= 255
-            error(peek, "Cannot have more than 255 arguments.")
+            raise error(peek, "Cannot have more than 255 arguments.")
           end
 
           arguments.push(expression)
@@ -513,13 +541,17 @@ module Kaze
       Expr::Call.new(callee, paren, arguments)
     end
 
-    # Initialize parsing a function call.
+    # Initialize parsing a call.
+    # The call may be a function call, or a get expression (i.e. property access in a class instance).
     private def call : Expr
       expr = primary
 
       loop do
         if match?(TT::LEFT_PAREN)
           expr = finish_call(expr)
+        elsif match?(TT::DOT)
+          name = consume(TT::IDENTIFIER, "Expect property name after \".\".")
+          expr = Expr::Get.new(expr, name)
         else
           break
         end
@@ -530,7 +562,7 @@ module Kaze
 
     # Parse a primary i.e. literal expression.
     # These include the following expressions:
-    # `true`, `false`, `nil`, any number or string literal, identifiers i.e. variable names, or grouping expressions i.e. parentheses.
+    # `true`, `false`, `nil`, `self`, any number or string literal, identifiers i.e. variable names, or grouping expressions i.e. parentheses.
     # An exception is raised if none of those are found.
     private def primary : Expr
       return Expr::Literal.new(false) if match?(TT::FALSE)
@@ -538,6 +570,8 @@ module Kaze
       return Expr::Literal.new(nil) if match?(TT::NIL)
 
       return Expr::Literal.new(previous.literal) if match?(TT::NUMBER, TT::STRING)
+
+      return Expr::Self.new(previous) if match?(TT::SELF)
 
       return Expr::Variable.new(previous) if match?(TT::IDENTIFIER)
 
@@ -591,6 +625,34 @@ module Kaze
       return peek.type == type
     end
 
+    # Checks a specific number of the next token types to see if they match the provided order.
+    private def check?(*types : TT) : Bool
+      return false if at_end?
+
+      i = 0
+      types.each do |type|
+        if @tokens[current + i].type == type && !at_end?
+          i += 1
+          next
+        else
+          return false
+        end
+      end
+
+      true
+    end
+
+    # Uses token lookaheads to check if the next tokens create an expression statement.
+    # Useful for checking if the return statement is at the end of a block, for instance.
+    private def expression_statement_next?
+      is_call = check?(TT::IDENTIFIER, TT::LEFT_PAREN)
+      is_assign = check?(TT::IDENTIFIER, TT::EQUAL)
+      is_set_or_get = check?(TT::IDENTIFIER, TT::DOT)
+      is_self_set_or_get = check?(TT::SELF, TT::DOT)
+
+      val = is_call || is_assign || is_set_or_get || is_self_set_or_get
+    end
+
     # Moves ahead in the token list.
     private def advance : Token
       @current += 1 unless at_end?
@@ -619,8 +681,7 @@ module Kaze
 
     # Prints an error message and returns a new ParseError.
     private def error(token : Token, message : String) : ParseError
-      Program.error(token, message)
-      ParseError.new
+      ParseError.new(token, message)
     end
 
     # Discards tokens until reaching EOF or until it finds one of some particular keywords.
@@ -631,7 +692,7 @@ module Kaze
         return if previous.type == TT::END
 
         case peek.type
-        when TT::CLASS, TT::FUN, TT::VAR, TT::FOR, TT::IF, TT::WHILE, TT::PRINTLN, TT::RETURN
+        when TT::CLASS, TT::FUN, TT::VAR, TT::FOR, TT::IF, TT::WHILE, TT::RETURN
           return
         end
 

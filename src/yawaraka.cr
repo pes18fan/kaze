@@ -27,6 +27,13 @@ module Kaze
 
     # Creates the standard library functions.
 
+    # print(): Prints to stdout.
+    Yawaraka.create_native_fun(Print, 1, 
+    begin
+      print Util.remove_escape_seqs(Util.stringify(arguments[0]))
+    end
+    )
+
     # clock(): Return the number of seconds passed since January 1st, 1970.
     Yawaraka.create_native_fun(Clock, 0, Time.utc.to_unix_ms / 1000)
 
