@@ -229,4 +229,4 @@ This does mean that if you wish to do something like `true and do_something()`, 
 var _ = true and do_something()
 ```
 
-`_` is a special variable name, in the sense that the compiler immediately discards whatever is assigned to it.
+`_` is a special variable name, in the sense that the interpreter immediately discards whatever is assigned to it.
