@@ -1,0 +1,10 @@
+
+fun one begin
+    return 1
+end
+
+fun return_one begin
+    return one()
+end
+
+print(return_one())

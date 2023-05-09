@@ -269,13 +269,9 @@ module Kaze
       keyword = previous
       value = nil
       unless check?(TT::END)
-        begin
-          if expression_statement_next?
-            raise error(keyword, "Return statement must be at the end of a block.")
-          end
+        value = expression
 
-          value = expression
-        rescue err : ParseError
+        unless check?(TT::END)
           raise error(keyword, "Return statement must be at the end of a block.")
         end
       end
