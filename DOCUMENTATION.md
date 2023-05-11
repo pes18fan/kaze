@@ -245,6 +245,16 @@ Dog("woof!").make_sound() //=> woof!
 
 Here, the `super` keyword is used to call the `make_sound` method on the superclass. You can override the subclass's method to do it's own thing though.
 
+# Yawaraka
+
+Kaze's standard library is called `Yawaraka`. It's currently very minimal and only has a few functions:
+
+```
+print(arg)   // Prints to stdout.
+scanln(arg)  // Recieves input from stdin. Takes an argument for the input prompt.
+clock()      // Returns the number of seconds passed since January 1st, 1970.
+```
+
 ## Note on statement termination
 
 In Kaze, statements do not need any terminators like a newline or a semicolon. This is due to expression statements in Kaze being nonexistent except in the REPL and except for a few cases like function calls.
