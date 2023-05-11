@@ -261,10 +261,6 @@ module Kaze
 
     # Parse a return statement.
     # A return statement must always be at the end of a block.
-    # If the next keyword it finds isn't `end`, it checks if the next statement is an expression statement and raises an exception if it is.
-    # If that's not the case, it tries to assign an expression as the return value.
-    # Since a ParseError is raised if the expression parser tries to parse a statement, we can simply catch that.
-    # Then, we can raise a more specific exception, instead of just "Expected expression".
     private def return_statement : Stmt
       keyword = previous
       value = nil
@@ -619,34 +615,6 @@ module Kaze
     private def check?(type : TT) : Bool
       return false if at_end?
       return peek.type == type
-    end
-
-    # Checks a specific number of the next token types to see if they match the provided order.
-    private def check?(*types : TT) : Bool
-      return false if at_end?
-
-      i = 0
-      types.each do |type|
-        if @tokens[current + i].type == type && !at_end?
-          i += 1
-          next
-        else
-          return false
-        end
-      end
-
-      true
-    end
-
-    # Uses token lookaheads to check if the next tokens create an expression statement.
-    # Useful for checking if the return statement is at the end of a block, for instance.
-    private def expression_statement_next?
-      is_call = check?(TT::IDENTIFIER, TT::LEFT_PAREN)
-      is_assign = check?(TT::IDENTIFIER, TT::EQUAL)
-      is_set_or_get = check?(TT::IDENTIFIER, TT::DOT)
-      is_self_set_or_get = check?(TT::SELF, TT::DOT)
-
-      val = is_call || is_assign || is_set_or_get || is_self_set_or_get
     end
 
     # Moves ahead in the token list.
