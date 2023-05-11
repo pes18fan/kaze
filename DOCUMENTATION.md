@@ -219,6 +219,32 @@ var greeter = Greeter("p18f")
 greeter.greet() // hello, p18f!
 ```
 
+## Inheritance
+
+Classes can inherit each other. This is done via the `<` operator.
+
+```kaze
+class Animal begin
+    init <- sound begin
+        self.sound = sound
+    end
+
+    make_sound begin
+        print(self.sound)
+    end
+end
+
+class Dog < Animal begin
+    make_sound begin
+        super.make_sound()
+    end
+end
+
+Dog("woof!").make_sound() //=> woof!
+```
+
+Here, the `super` keyword is used to call the `make_sound` method on the superclass. You can override the subclass's method to do it's own thing though.
+
 ## Note on statement termination
 
 In Kaze, statements do not need any terminators like a newline or a semicolon. This is due to expression statements in Kaze being nonexistent except in the REPL and except for a few cases like function calls.
