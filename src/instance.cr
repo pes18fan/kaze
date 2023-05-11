@@ -2,12 +2,12 @@ module Kaze
   # Runtime representation of a class instance.
   class Instance
     # The class out of which this instance is born.
-    private property klass : KazeClass
+    private property klass : Klass
 
     # The fields in this instance.
     private property fields = Hash(String, VG).new
 
-    def initialize(@klass : KazeClass)
+    def initialize(@klass : Klass)
     end
 
     # Returns a field with the key `name`.

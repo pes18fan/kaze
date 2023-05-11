@@ -1,0 +1,14 @@
+class Donut begin
+    cook begin
+        print("Fry until golden brown.\n")
+    end
+end
+
+class BostonCream < Donut begin
+    cook begin
+        super.cook()
+        print("Pipe full of custard and coat with chocolates.\n")
+    end
+end
+
+BostonCream().cook()

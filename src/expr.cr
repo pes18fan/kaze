@@ -18,6 +18,7 @@ module Kaze
       abstract def visit_logical_expr(expr : Logical) : VG
       abstract def visit_self_expr(expr : Self) : VG
       abstract def visit_set_expr(expr : Set) : VG
+      abstract def visit_super_expr(expr : Super) : VG
       abstract def visit_unary_expr(expr : Unary) : VG
       abstract def visit_ternary_expr(expr : Ternary) : VG
       abstract def visit_variable_expr(expr : Variable) : VG
@@ -143,6 +144,18 @@ module Kaze
 
       def accept(visitor : Visitor)
         visitor.visit_set_expr(self)
+      end
+    end
+
+    class Super < Expr
+      getter keyword
+      getter method
+
+      def initialize(@keyword : Token, @method : Token)
+      end
+
+      def accept(visitor : Visitor)
+        visitor.visit_super_expr(self)
       end
     end
 

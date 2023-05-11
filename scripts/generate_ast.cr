@@ -16,6 +16,7 @@ define_ast(output_dir, "expr", [
   "Logical   $     left : Expr, operator : Token, right : Expr",
   "Self      $     keyword : Token",
   "Set       $     object : Expr, name : Token, value : Expr",
+  "Super     $     keyword : Token, method : Token",
   "Unary     $     operator : Token, right : Expr",
   "Ternary   $     condition : Expr, left : Expr, right : Expr",
   "Variable  $     name : Token"
@@ -23,7 +24,7 @@ define_ast(output_dir, "expr", [
 
 define_ast(output_dir, "stmt", [
   "Block        $   statements : Array(Stmt)",
-  "Class        $   name : Token, methods : Array(Stmt::Function)",
+  "Class        $   name : Token, superclass : Expr::Variable?, methods : Array(Stmt::Function)",
   "Expression   $   expression : Expr",
   "Function     $   name : Token?, params : Array(Token), body : Array(Stmt)",
   "If           $   condition : Expr, then_branch : Stmt, else_branch : Stmt?",

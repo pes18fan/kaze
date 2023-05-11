@@ -34,14 +34,14 @@ module Kaze
     # modulo          -> unary ( "%" unary )* ;
     # unary           -> ( "!" | "-" ) unary | primary ;
     # call            -> primary ( "(" arguments? ")" | "." IDENTIFIER )* ;
-    # primary         -> NUMBER | STRING | IDENTIFIER | "true" | "false" | "nil" | "(" expression ")" ;
+    # primary         -> NUMBER | STRING | IDENTIFIER | "super" "." IDENTIFIER | "true" | "false" | "nil" | "(" expression ")" ;
 
     # Parser grammar:
     # program         -> declaration* EOF ;
 
     # declaration     -> class_decl | fun_decl | var_decl | statement ;
 
-    # class_decl      -> "class" IDENTIFIER "begin" function* "end" ;
+    # class_decl      -> "class" IDENTIFIER ( "<" IDENTIFIER )? "begin" function* "end" ;
     # fun_decl        -> "fun" function ;
 
     # function        -> IDENTIFIER ( "<-" parameters )? block ;
@@ -52,7 +52,7 @@ module Kaze
     # statement       -> expr_stmt | for_stmt | if_stmt | return_stmt | while_stmt | block ;
 
     # if_stmt         -> "if" expression "then" statement ( "else" statement )? ;
-    # expr_stmt       -> call | assign ;
+    # expr_stmt       -> call | assignment ;
     # for_stmt        -> "for" ( var_decl | expr_stmt )? ";" expression? ";" expression ( "do" statement | block ) ;
     # return_stmt     -> "return" expression? ;
     # while_stmt      -> "while" expression ( "do" statement | block ) ;
@@ -122,6 +122,13 @@ module Kaze
     # Parse a class declaration.
     private def class_declaration : Stmt
       name = consume(TT::IDENTIFIER, "Expect class name.")
+
+      superclass : Expr::Variable? = nil
+      if match?(TT::LESS)
+        consume(TT::IDENTIFIER, "Expect superclass name.")
+        superclass = Expr::Variable.new(previous)
+      end
+
       consume(TT::BEGIN, "Expect \"begin\" before class body.")
 
       methods = Array(Stmt::Function).new
@@ -132,7 +139,7 @@ module Kaze
 
       consume(TT::END, "Expect \"end\" after class body.")
 
-      Stmt::Class.new(name, methods)
+      Stmt::Class.new(name, superclass, methods)
     end
 
     # Parse a function definition.
@@ -562,6 +569,13 @@ module Kaze
       return Expr::Literal.new(nil) if match?(TT::NIL)
 
       return Expr::Literal.new(previous.literal) if match?(TT::NUMBER, TT::STRING)
+
+      if match?(TT::SUPER)
+        keyword = previous
+        consume(TT::DOT, "Expect \".\" after \"super\".")
+        method = consume(TT::IDENTIFIER, "Expect superclass method name.")
+        return Expr::Super.new(keyword, method)
+      end
 
       return Expr::Self.new(previous) if match?(TT::SELF)
 

@@ -28,9 +28,10 @@ module Kaze
 
     class Class < Stmt
       getter name
+      getter superclass
       getter methods
 
-      def initialize(@name : Token, @methods : Array(Stmt::Function))
+      def initialize(@name : Token, @superclass : Expr::Variable?, @methods : Array(Stmt::Function))
       end
 
       def accept(visitor : Visitor)

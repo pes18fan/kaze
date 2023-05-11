@@ -24,6 +24,7 @@ module Kaze
     private enum ClassType
       NONE
       CLASS
+      SUBCLASS
     end
 
     def initialize(@interpreter : Interpreter)
@@ -62,6 +63,21 @@ module Kaze
       declare(stmt.name)
       define(stmt.name)
 
+      unless stmt.superclass.nil?
+        @current_class = ClassType::SUBCLASS
+
+        if stmt.name.lexeme == stmt.superclass.as(Expr::Variable).name.lexeme
+          Program.error(stmt.superclass.as(Expr::Variable).name, "A class can't inherit from itself.")
+        end
+
+        resolve(stmt.superclass)
+      end
+
+      unless stmt.superclass.nil?
+        begin_scope
+        @scopes.peek["super"] = true
+      end
+
       begin_scope
       @scopes.peek["self"] = true
 
@@ -76,6 +92,8 @@ module Kaze
       end
 
       end_scope
+
+      end_scope unless stmt.superclass.nil?
 
       @current_class = enclosing_class
       nil
@@ -174,6 +192,17 @@ module Kaze
     def visit_set_expr(expr : Expr::Set) : Nil
       resolve(expr.value)
       resolve(expr.object)
+      nil
+    end
+
+    def visit_super_expr(expr : Expr::Super) : Nil
+      if @current_class == ClassType::NONE
+        Program.error(expr.keyword, "Can't use \"super\" outside a class.")
+      elsif @current_class != ClassType::SUBCLASS
+        Program.error(expr.keyword, "Can't use \"super\" in a class with no superclass.")
+      end
+
+      resolve_local(expr, expr.keyword)
       nil
     end
 

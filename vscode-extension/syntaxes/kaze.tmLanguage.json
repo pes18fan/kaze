@@ -16,7 +16,7 @@
         "keywords": {
             "patterns": [
                 {
-                    "match": "\\b(if|else|while|for|then|do|begin|end|return|break|next)\\b",
+                    "match": "\\b(if|else|while|for|then|do|begin|end|return|break|next|super)\\b",
                     "name": "keyword.control.kaze"
                 },
                 {

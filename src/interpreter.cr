@@ -5,7 +5,7 @@ require "./runtime_error"
 require "./callable"
 require "./yawaraka"
 require "./function"
-require "./kaze_class"
+require "./klass"
 require "./util"
 require "./return"
 
@@ -196,6 +196,22 @@ module Kaze
       value
     end
 
+    # Evaluates a `super` expression.
+    def visit_super_expr(expr : Expr::Super) : VG
+      distance = @locals[expr]
+      superclass = @environment.get_at(distance, "super").as(Klass)
+
+      object = @environment.get_at(distance - 1, "self").as(Instance)
+
+      method = superclass.find_method(expr.method.lexeme)
+
+      if method.nil?
+        raise RuntimeError.new(expr.method, "Undefined property \"#{expr.method.lexeme}\".")
+      end
+
+      method.bind(object)
+    end
+
     # Evaluates `self`.
     def visit_self_expr(expr : Expr::Self) : VG
       look_up_variable(expr.keyword, expr)
@@ -280,8 +296,6 @@ module Kaze
       a == b
     end
 
-
-
     # Stringifies an expression value, but also prepends a `=>`.
     # Used in the REPL to show the return value of expressions.
     private def return_stringify(object : VG)
@@ -326,7 +340,22 @@ module Kaze
 
     # Interprets a class.
     def visit_class_stmt(stmt : Stmt::Class) : Nil
+      superclass : VG? = nil
+
+      unless stmt.superclass.nil?
+        superclass = evaluate(stmt.superclass.as(Expr::Variable))
+
+        unless superclass.is_a?(Klass)
+          raise RuntimeError.new(stmt.superclass.as(Expr::Variable).name, "Superclass must be a class.")
+        end
+      end
+
       @environment.define(stmt.name.lexeme, nil)
+
+      unless stmt.superclass.nil?
+        @environment = Environment.new(@environment)
+        @environment.define("super", superclass.as(Klass))
+      end
 
       methods = Hash(String, Function).new
 
@@ -335,7 +364,12 @@ module Kaze
         methods[method.name.as(Token).lexeme] = function
       end
 
-      klass = KazeClass.new(stmt.name.lexeme, methods)
+      klass = Klass.new(stmt.name.lexeme, superclass.as(Klass?), methods)
+
+      unless superclass.nil?
+        @environment = @environment.enclosing.as(Environment)
+      end
+
       @environment.assign(stmt.name, klass)
       nil
     end

@@ -4,16 +4,21 @@ require "./function"
 
 module Kaze
   # Runtime representation of a class.
-  class KazeClass < Callable
+  class Klass < Callable
     property name : String
+    property superclass : Klass?
     private property methods : Hash(String, Function)
 
-    def initialize(@name : String, @methods : Hash(String, Function))
+    def initialize(@name : String, @superclass : Klass?, @methods : Hash(String, Function))
     end
 
     def find_method(name : String) : Function?
       if methods.has_key?(name)
         return methods[name]
+      end
+
+      unless superclass.nil?
+        return superclass.as(Klass).find_method(name)
       end
 
       nil
