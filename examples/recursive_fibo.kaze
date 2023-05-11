@@ -6,9 +6,8 @@ var a = clock()
 
 print(1 + "\n")
 
-for var i = 0; i <= 25; i = i + 1 begin
+for var i = 0; i <= 25; i = i + 1 do
     print(fib(i) + "\n")
-end
 
 var b = clock()
 

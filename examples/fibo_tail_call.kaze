@@ -3,9 +3,8 @@ var fib = lambda n: fibrec(n + 1, 1, 0)
 
 var a = clock()
 
-for var i = 1; i <= 25; i = i + 1 begin
+for var i = 1; i <= 25; i = i + 1 do
     print(fib(i) + "\n")
-end
 
 var b = clock()
 
