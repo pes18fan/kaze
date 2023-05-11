@@ -1,0 +1,12 @@
+// returns square root
+fun sqrt <- x begin
+    var z = 1
+
+    for var i = 0; i <= 10; i = i + 1 begin
+        z = z - ( ( z * z - x ) / (2 * z) )
+    end
+
+    return z
+end
+
+print(sqrt(36)) //=> 6
