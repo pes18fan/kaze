@@ -184,6 +184,7 @@ module Kaze
 
     # Parse a statement.
     private def statement : Stmt | Expr
+      return break_statement if match?(TT::BREAK)
       return for_statement if match?(TT::FOR)
       return if_statement if match?(TT::IF)
       return return_statement if match?(TT::RETURN)
@@ -220,15 +221,18 @@ module Kaze
       body = as_stmt(declaration, "Expect statement.")
 
       if increment != nil
+        incr = Stmt::Var.new(Token.new(TT::IDENTIFIER, "_", nil, peek.line, 0), increment.as(Expr))
+
+        # If the body has a `next` statement, the increment is added just before it.
         body = Stmt::Block.new(
           [
             body,
-            Stmt::Var.new(Token.new(TT::IDENTIFIER, "_", nil, peek.line, 0), increment.as(Expr)),
+            incr,
           ]
         )
       end
 
-      if condition == nil
+      if condition.nil?
         condition = Expr::Literal.new(true)
       end
       body = Stmt::While.new(condition.as(Expr), body)
@@ -291,6 +295,13 @@ module Kaze
       body = as_stmt(declaration, "Expect statement.")
 
       Stmt::While.new(condition, body)
+    end
+
+    # Parse a break statement.
+    private def break_statement : Stmt
+      keyword = previous
+
+      Stmt::Break.new(keyword)
     end
 
     # Parse an expression as a statement, but only if its a function call or an assignment.

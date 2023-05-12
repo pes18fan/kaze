@@ -8,6 +8,7 @@ require "./function"
 require "./klass"
 require "./util"
 require "./return"
+require "./break"
 
 module Kaze
   # Interpreter to compute expressions and statements.
@@ -407,6 +408,10 @@ module Kaze
       raise Return.new(value)
     end
 
+    def visit_break_stmt(stmt : Stmt::Break) : Nil
+      raise Break.new
+    end
+
     # Executes a variable declaration.
     def visit_var_stmt(stmt : Stmt::Var) : Nil
       value : VG = nil
@@ -422,7 +427,11 @@ module Kaze
     # Executes a while statement.
     def visit_while_stmt(stmt : Stmt::While) : Nil
       while truthy?(evaluate stmt.condition)
-        execute stmt.body
+        begin
+          execute stmt.body
+        rescue brk : Break
+          break
+        end
       end
     end
   end

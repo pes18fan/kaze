@@ -12,6 +12,7 @@ module Kaze
     include Stmt::Visitor
 
     private property interpreter : Interpreter
+    private property in_loop : Bool
 
     private enum FunctionType
       NONE
@@ -33,6 +34,7 @@ module Kaze
 
       @current_function = FunctionType::NONE
       @current_class = ClassType::NONE
+      @in_loop = false
     end
 
     def resolve(statements : Array(Stmt))
@@ -126,9 +128,21 @@ module Kaze
       nil
     end
 
+    def visit_break_stmt(stmt : Stmt::Break) : Nil
+      unless @in_loop
+        Program.error(stmt.keyword, "Can't break outside a loop.")
+      end
+
+      nil
+    end
+
     def visit_while_stmt(stmt : Stmt::While) : Nil
+      @in_loop = true
+
       resolve(stmt.condition)
       resolve(stmt.body)
+
+      @in_loop = false
       nil
     end
 

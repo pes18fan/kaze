@@ -26,6 +26,7 @@ module Kaze
     @@KEYWORDS : Hash(String, TT) = {
       "and"     => TT::AND,
       "begin"   => TT::BEGIN,
+      "break"   => TT::BREAK,
       "class"   => TT::CLASS,
       "do"      => TT::DO,
       "else"    => TT::ELSE,

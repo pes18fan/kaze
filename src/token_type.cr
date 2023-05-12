@@ -40,6 +40,7 @@ module Kaze
 
     AND
     BEGIN
+    BREAK
     CLASS
     DO
     ELSE
