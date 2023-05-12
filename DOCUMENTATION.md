@@ -67,7 +67,7 @@ end
 
 ## Loops
 
-Kaze supports `while` and `for` loops.
+Kaze supports `while` and `for` loops. You can get out of a loop any time by using the `break` statement.
 
 ### while
 
