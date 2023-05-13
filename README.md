@@ -1,7 +1,5 @@
 # kaze 風
 
-**STILL VERY EARLY IN DEVELOPMENT**
-
 A basic tree-walk interpreter for Kaze, a simple interpreted programming language. Based on everyone's favorite interpreted learning-language [Lox](https://www.craftinginterpreters.com). Focused on being easy to use and having intuitive syntax.
 
 I created this to learn some basic things about programming language development. Kaze will recieve a much faster and more optimized bytecode-compiling interpreter in the future.
@@ -23,6 +21,31 @@ kaze
 ## vscode extension
 
 This repo includes a VSCode extension that provides syntax highlighting for the language! To use it, simply move the folder into your `.vscode/extensions/` directory in your home folder, which is `~` in Linux and `C:\Users\<username>` in Windows.
+
+## examples
+
+### hello, world
+
+```kaze
+print("hello, world!\n")
+```
+
+### square root
+
+```kaze
+fun sqrt <- x begin
+    var z = 1
+
+    for var i = 0; i <= 10; i = i + 1 do
+        z = z - ( ( z * z - x ) / (2 * z) )
+
+    return z
+end
+
+print(sqrt(36)) //=> 6
+```
+
+See more examples in `/examples/`.
 
 # building
 
