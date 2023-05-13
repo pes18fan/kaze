@@ -1,8 +1,8 @@
 # kaze 風
 
-A basic tree-walk interpreter for Kaze, a simple interpreted programming language. Based on everyone's favorite interpreted learning-language [Lox](https://www.craftinginterpreters.com). Focused on being easy to use and having intuitive syntax.
+A basic tree-walk interpreter for Kaze, a simple interpreted programming language. Based on everyone's favorite interpreted learning-language [Lox](https://www.craftinginterpreters.com).
 
-I created this to learn some basic things about programming language development. Kaze will recieve a much faster and more optimized bytecode-compiling interpreter in the future.
+I created this to learn some basic things about programming language development. Kaze is nothing more than a simple toy language, and not intended for any real world use.
 
 # quickstart
 

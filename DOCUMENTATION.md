@@ -1,6 +1,4 @@
-Welcome to kaze! Kaze is a super simple interpreted language designed as a small toy project of mine. It is mainly influenced by Ruby, Lua and Lox (on which the interpreter itself is based!). Enjoy your stay!
-
-Please note that this is experimental software, and things have a high chance of breaking.
+Welcome to Kaze! It is a super simple interpreted language designed as a small toy project of mine. It is mainly influenced by Ruby, Lua and Lox (on which the interpreter itself is based!). I hope you enjoy hacking around with it!
 
 Get started with a hello world:
 
