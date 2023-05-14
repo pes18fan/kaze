@@ -1,0 +1,26 @@
+name: Deployment
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: crystallang/crystal:latest-alpine
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install dependencies
+      run: shards install
+    - name: Build
+      run: |
+        apk add --no-cache just
+        just r
+        mv ./bin/release/kaze ./bin/release/kaze_linux_x86_64
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        files: ./bin/release/kaze_linux_x86_64
