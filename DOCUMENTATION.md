@@ -248,9 +248,11 @@ Here, the `super` keyword is used to call the `make_sound` method on the supercl
 Kaze's standard library is called `Yawaraka`. It's currently very minimal and only has a few functions:
 
 ```
-print(arg)   // Prints to stdout.
-scanln(arg)  // Recieves input from stdin. Takes an argument for the input prompt.
-clock()      // Returns the number of seconds passed since January 1st, 1970.
+print(str: string)      // Prints to stdout.
+println(str: string)    // Prints to stdout and appends a newline.
+scanln(prompt: string)  // Recieves input from stdin. Takes an argument for the input prompt.
+clock()                 // Returns the number of seconds passed since January 1st, 1970.
+parse(foo)              // Parses to a 64-bit float, Kaze's number type. Errors if it fails to parse the argument.
 ```
 
 ## Note on statement termination

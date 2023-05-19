@@ -28,8 +28,10 @@ module Kaze
 
       # Library function definitions.
       @globals.define("print", Yawaraka::Print.new)
+      @globals.define("println", Yawaraka::Println.new)
       @globals.define("clock", Yawaraka::Clock.new)
       @globals.define("scanln", Yawaraka::Scanln.new)
+      @globals.define("parse", Yawaraka::Parse.new)
     end
 
     # Interprets a source file.
@@ -169,7 +171,11 @@ module Kaze
         raise RuntimeError.new(expr.paren, "Expected #{function.arity} arguments but got #{arguments.size}.")
       end
 
-      function.call(self, arguments)
+      begin
+        function.call(self, arguments)
+      rescue ex
+        raise RuntimeError.new(expr.paren, ex.message)
+      end
     end
 
     # Evaluates a get expression.
