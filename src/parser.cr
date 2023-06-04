@@ -308,11 +308,12 @@ module Kaze
     # Returns an expression if in a REPL session.
     private def expression_statement : Expr | Stmt
       expr = expression
-      return expr if @repl
-
-      if expr.is_a?(Expr::Call) || expr.is_a?(Expr::Assign) || expr.is_a?(Expr::Set) || expr.is_a?(Expr::Get)
-        return Stmt::Expression.new(expr)
+      if @repl &&
+          !(expr.is_a?(Expr::Call) || expr.is_a?(Expr::Assign) || expr.is_a?(Expr::Set) || expr.is_a?(Expr::Get))
+        return expr
       end
+
+      return Stmt::Expression.new(expr)
 
       raise error(peek, "Unexpected expression.")
     end

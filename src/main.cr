@@ -43,10 +43,34 @@ module Kaze
       puts "Enter \".exit\" to exit."
       i = 1
       loop do
+        prompt = ""
+
         print "kaze:#{i}> "
-        line = gets(chomp: true)
-        break if line.nil? || line == ".exit"
-        run(line.to_s, true)
+        line = gets
+        break if line.nil?
+
+        if line.as(String)[-1] == '\\'
+          line = line.as(String)[0..-2] + '\n'
+          loop do
+            i += 1
+
+            print "kaze:#{i}| "
+
+            line_or_nil = gets
+            break if line_or_nil == Nil
+
+            line += line_or_nil.as(String)
+            break if line.as(String)[-1] != '\\'
+
+            line = line[0..-2]
+            line = line + '\n'
+          end
+        end
+
+        break if line == ".exit"
+
+        prompt = line.to_s
+        run(prompt, true)
         @@had_error = false
         i += 1
       end
