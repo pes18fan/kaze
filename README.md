@@ -1,3 +1,8 @@
+# ARCHIVAL NOTICE
+
+kaze is no longer under development. Check out its sort-of successor [zen](https://github.com/pes18fan/zen)
+though!
+
 # kaze 風
 
 A basic tree-walk interpreter for Kaze, a simple interpreted programming language. Based on everyone's favorite interpreted learning-language [Lox](https://www.craftinginterpreters.com).
